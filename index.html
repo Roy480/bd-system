@@ -66,9 +66,57 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .topbar-icon-btn { background: none; border: none; color: rgba(255,255,255,.8); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px; border-radius: 6px; display: flex; align-items: center; }
 .topbar-icon-btn:hover { color: #fff; background: rgba(255,255,255,.12); }
 
-.main-body { flex: 1; }
-.page { display: none; }
-.page.active { display: block; }
+.main-body { flex: 1; display: flex; min-height: 0; }
+
+/* ════════════════════════════════
+   左側客戶側欄 (HubSpot 風格)
+════════════════════════════════ */
+.app-layout { display: flex; flex: 1; min-height: 0; width: 100%; }
+.sidebar-customers { width: 280px; flex-shrink: 0; border-right: 1px solid var(--border2); background: var(--card); display: flex; flex-direction: column; overflow: hidden; }
+.sidebar-header { padding: 12px 14px; border-bottom: 1px solid var(--border2); display: flex; gap: 6px; }
+.sidebar-search { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: var(--font); background: var(--card); color: var(--text); }
+.sidebar-search:focus { outline: none; border-color: var(--primary); }
+.sidebar-stats { padding: 8px 14px; font-size: 11px; color: var(--text3); border-bottom: 1px solid var(--border2); display: flex; gap: 8px; flex-wrap: wrap; }
+.sidebar-list { flex: 1; overflow-y: auto; }
+.sidebar-group-header { display: flex; align-items: center; gap: 6px; padding: 8px 14px; font-size: 11px; font-weight: 700; color: var(--text2); cursor: pointer; background: var(--bg2); border-bottom: 1px solid var(--border2); user-select: none; }
+.sidebar-group-header:hover { background: var(--border2); }
+.sidebar-group-header i { font-size: 12px; color: var(--text3); flex-shrink: 0; }
+.sidebar-group-count { margin-left: auto; background: var(--card); border: 1px solid var(--border2); border-radius: 99px; padding: 0 7px; font-size: 10px; font-weight: 600; color: var(--text3); }
+.sidebar-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; cursor: pointer; border-bottom: 1px solid var(--border2); position: relative; transition: background .12s; }
+.sidebar-item:hover { background: var(--bg2); }
+.sidebar-item.active { background: #eef1fd; }
+.sidebar-item.active::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--primary); }
+.sidebar-item .avatar { width: 32px; height: 32px; font-size: 12px; flex-shrink: 0; }
+.sidebar-item-info { flex: 1; min-width: 0; }
+.sidebar-item-name { font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+.sidebar-item-sub { font-size: 11px; color: var(--text3); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sidebar-overdue-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.sidebar-empty { padding: 2rem 1rem; text-align: center; color: var(--text3); font-size: 13px; line-height: 1.7; }
+
+.main-panel { flex: 1; min-width: 0; overflow-y: auto; padding: 1.25rem 1.5rem 4rem; }
+
+/* 客戶詳情：左側摘要卡 + 右側橫向分頁 */
+.detail-body { display: flex; gap: 20px; align-items: flex-start; }
+.detail-sidebar { width: 260px; flex-shrink: 0; background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px; }
+.detail-main { flex: 1; min-width: 0; }
+.summary-sec-title { font-size: 11px; font-weight: 600; color: var(--primary); text-transform: uppercase; letter-spacing: .05em; margin: 16px 0 6px; }
+.summary-sec-title:first-child { margin-top: 0; }
+.summary-row { display: flex; justify-content: space-between; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--border2); font-size: 13px; gap: 8px; }
+.summary-row:last-child { border-bottom: none; }
+.summary-label { color: var(--text3); font-size: 12px; flex-shrink: 0; }
+.summary-val { font-weight: 600; color: var(--text); text-align: right; }
+.quick-log-box { margin-top: 8px; }
+.quick-log-input { width: 100%; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 12px; font-family: var(--font); margin-bottom: 6px; background: var(--card); color: var(--text); }
+.quick-log-input:focus { outline: none; border-color: var(--primary); }
+.quick-log-btn { width: 100%; }
+.quick-log-preview { font-size: 11px; color: var(--text3); margin-top: 10px; line-height: 1.5; border-top: 1px dashed var(--border2); padding-top: 8px; }
+
+@media(max-width:760px){
+  .app-layout { flex-direction: column; }
+  .sidebar-customers { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border2); }
+  .detail-body { flex-direction: column; }
+  .detail-sidebar { width: 100%; }
+}
 
 /* ════════════════════════════════
    Pipeline 頁
@@ -152,12 +200,30 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .cust-page-sub { font-size: 12px; color: var(--text3); margin-top: 2px; }
 .cust-page-actions { margin-left: auto; display: flex; gap: 6px; }
 
+/* 階段進度條 */
+.stage-bar-wrap { margin-bottom: 1.25rem; }
+.stage-bar { display: flex; align-items: center; }
+.stage-step { display: flex; flex-direction: column; align-items: center; flex: 1; cursor: pointer; position: relative; }
+.stage-dot { width: 22px; height: 22px; border-radius: 50%; background: var(--card); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--text3); transition: all .15s; z-index: 1; }
+.stage-step.done .stage-dot { background: var(--primary); border-color: var(--primary); color: #fff; }
+.stage-step.current .stage-dot { background: #fff; border-color: var(--primary); color: var(--primary); box-shadow: 0 0 0 4px rgba(102,126,234,.15); }
+.stage-step.paused .stage-dot { background: var(--bg2); border-color: #bbb; color: #888; }
+.stage-line { flex: 1; height: 2px; background: var(--border); margin: 0 -1px; align-self: flex-start; margin-top: 10px; }
+.stage-line.done { background: var(--primary); }
+.stage-pct { font-size: 10px; color: var(--text3); margin-top: 4px; font-weight: 600; }
+.stage-step.done .stage-pct, .stage-step.current .stage-pct { color: var(--primary); }
+.stage-label { font-size: 11px; color: var(--text3); margin-top: 2px; white-space: nowrap; }
+.stage-step.done .stage-label, .stage-step.current .stage-label { color: var(--text); font-weight: 500; }
+.stage-paused-tag { text-align: center; font-size: 11px; color: #888; margin-top: 8px; background: var(--bg2); border-radius: 99px; padding: 3px 10px; display: inline-block; }
+.stage-paused-wrap { text-align: center; }
+
 /* Tabs */
 .tab-nav { display: flex; border-bottom: 1px solid var(--border2); margin-bottom: 1.25rem; gap: 0; overflow-x: auto; scrollbar-width: none; }
 .tab-nav::-webkit-scrollbar { display: none; }
 .tab-btn { padding: 9px 16px; font-size: 13px; font-weight: 500; color: var(--text3); background: none; border: none; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; font-family: var(--font); transition: all .12s; }
 .tab-btn:hover { color: var(--text2); }
 .tab-btn.active { color: var(--primary); border-bottom-color: var(--primary); }
+.tab-warn-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--red); margin-left: 4px; vertical-align: middle; }
 .tab-pane { display: none; }
 .tab-pane.active { display: block; }
 
@@ -278,6 +344,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .field label { display: block; font-size: 12px; color: var(--text2); margin-bottom: 4px; font-weight: 500; }
 .field input, .field select, .field textarea { width: 100%; padding: 8px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 14px; background: var(--bg2); color: var(--text); font-family: var(--font); }
 .field input:focus, .field select:focus, .field textarea:focus { outline: none; border-color: var(--primary); }
+.field-hint { font-size: 11px; color: var(--text3); margin-top: 5px; line-height: 1.5; }
 .modal-btns { display: flex; gap: 8px; margin-top: 1.25rem; }
 .btn-confirm { flex: 1; padding: 9px; border: none; border-radius: var(--radius); background: linear-gradient(135deg, var(--primary), var(--purple)); color: #fff; font-size: 14px; cursor: pointer; font-weight: 600; font-family: var(--font); }
 .btn-cancel-modal { flex: 1; padding: 9px; border: 1px solid var(--border); border-radius: var(--radius); background: transparent; color: var(--text); font-size: 14px; cursor: pointer; font-family: var(--font); }
@@ -321,7 +388,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 <div id="screen-main" class="screen">
   <div class="topbar">
     <div class="topbar-logo">BD<span>.</span></div>
-    <div class="topbar-badge"><i class="ti ti-users" style="font-size:10px;margin-right:3px;"></i>學員版</div>
+    <div class="topbar-badge"><i class="ti ti-user" style="font-size:10px;margin-right:3px;"></i>個人版</div>
     <div class="topbar-right">
       <button class="topbar-icon-btn" onclick="exportExcel()" title="匯出 Excel"><i class="ti ti-table-export"></i></button>
       <button class="topbar-icon-btn" onclick="exportJSON()" title="備份資料"><i class="ti ti-download"></i></button>
@@ -331,8 +398,10 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
     </div>
   </div>
   <div class="main-body">
-    <div id="page-pipeline" class="page active"></div>
-    <div id="page-customer" class="page"></div>
+    <div class="app-layout">
+      <div id="sidebar-customers" class="sidebar-customers"></div>
+      <div id="main-panel" class="main-panel"></div>
+    </div>
   </div>
 </div>
 
@@ -351,6 +420,7 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
     </div>
     <div class="field"><label>客戶分類</label>
       <select id="f-abc"><option value="">未分類</option><option value="A">A 類｜全力投入</option><option value="B">B 類｜輕量維護</option><option value="C">C 類｜準備放棄</option></select>
+      <div class="field-hint">還不確定？先選未分類，做完「診斷」後再回來分類。判斷依據：A＝有需求+有預算+有時間表；B＝有需求但預算或時程不確定；C＝需求薄弱、多次接觸沒進展</div>
     </div>
     <div class="field"><label>合約金額（NTD）</label><input id="f-amount" type="number" placeholder="0"></div>
     <div class="field"><label>備註</label><textarea id="f-note" rows="2" placeholder="產業背景、特殊條件…"></textarea></div>
@@ -372,6 +442,12 @@ const TODAY = new Date().toISOString().slice(0,10);
 const STATUSES = ['接觸中','建立信任','推進中','成交談判','已簽約','暫緩跟進'];
 const INV_MODES = ['60% 頭款 & 40% 尾款','結案後付款','自訂'];
 const Q_DESC = {Q1:'觀望型｜降頻維護',Q2:'快速贏｜全力加碼',Q3:'直接放｜最後通牒',Q4:'戰略型｜3問快篩'};
+const Q_DESC_FULL = {
+  Q1:'可能性低、成本也低：不用花太多力氣主動推，定期簡單維護即可，不用完全放棄',
+  Q2:'可能性高、成本低：最容易拿下的案子，值得全力加碼、優先處理',
+  Q3:'可能性低、成本高：投入下去不划算，設個停損點，最後通牒後準備放掉',
+  Q4:'可能性高、成本也高：值得投資，但先用三個關鍵問題快篩，避免盲目砸資源'
+};
 const AV_COLORS = [
   ['#e8eaf6','#3949ab'],['#e8f5e9','#2e7d32'],['#fff3e0','#e65100'],
   ['#fce4ec','#880e4f'],['#e3f2fd','#1565c0'],['#f3e5f5','#6a1b9a'],['#e0f2f1','#00695c']
@@ -402,7 +478,7 @@ function doLogin(){
   sessionStorage.setItem('bds_auth','1');
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-main').classList.add('active');
-  renderPipeline();
+  showOverview();
 }
 function logout(){
   if(!confirm('確定登出？'))return;
@@ -424,6 +500,13 @@ let customers = JSON.parse(localStorage.getItem('bds_v1')||'[]');
 let nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
 let nextLogId = 2000;
 let currentCustomerId = null;
+let currentActiveTab = 'diag';
+let sidebarCollapsed = {'已簽約':true,'暫緩跟進':true}; // 預設收合已完成/暫停的組，其他展開
+
+function toggleSidebarGroup(status){
+  sidebarCollapsed[status] = !sidebarCollapsed[status];
+  renderSidebar();
+}
 let activeFilters = new Set();
 let editingId = null;
 
@@ -451,8 +534,8 @@ function getRecommendation(c){
     return { text:'繼續建立信任。每次互動要有「小收穫」——一個確認、一個問題的解答、一個共識。', tab:'日誌', action:'記錄今天互動' };
   }
   if(stage==='推進中'){
-    if(!dmOk) return { text:'⚠ 還沒接觸到 Decision Maker。現在最重要的事不是繼續推，是找到真正能拍板的人。', tab:'推進', action:'設計推進計畫' };
-    if(over2w) return { text:'卡超過 2 週了。用工具表 C 的三個問題（DM / 決策壓力 / 內部反對者）重新診斷，然後設計接下來 2 週的推進節奏。', tab:'推進', action:'重新設計推進計畫' };
+    if(!dmOk) return { text:'⚠ 還沒接觸到決策者。現在最重要的事不是繼續推，是找到真正能拍板的人。', tab:'推進', action:'設計推進計畫' };
+    if(over2w) return { text:'卡超過 2 週了。用工具表 C 的三個問題（決策者 / 決策壓力 / 內部反對者）重新診斷，然後設計接下來 2 週的推進節奏。', tab:'推進', action:'重新設計推進計畫' };
     return { text:'案子在推進中，維持節奏。記得每次互動結束都要確認「下一步是什麼、誰負責、什麼時間」。', tab:'推進', action:'查看推進計畫' };
   }
   if(stage==='成交談判'){
@@ -468,30 +551,96 @@ function getRecommendation(c){
   return { text:'繼續加油！記得每次互動後更新日誌，讓系統幫你追蹤節奏。', tab:'日誌', action:'記錄互動' };
 }
 
+// ── 推進計畫建議（依三個關鍵問題的答案，給 junior BD 預設行動方向；仍可自行編輯覆蓋）──
+// 判斷優先順序：決策者未接觸 > 有內部反對者 > 無決策壓力 > 一路順
+// 三題都要有明確答案才給對應建議組，避免只填一半就提早誤判
+function pushPlanSuggest(c){
+  const dm = c.pushDM, pr = c.pushPressure, op = c.pushOpponent;
+  const answered = v => v===true || v===false;
+
+  if(!answered(dm)) return null;
+  if(dm===false){
+    return ['透過現有窗口，直接問「這件事最後是誰拍板？」','嘗試約到決策者，用「10 分鐘簡短交流」降低門檻','若還沒約到，請窗口先把資料轉給決策者，附上具體效益','重新評估：決策者仍接觸不到就考慮降頻'];
+  }
+  // dm === true，決策者已接觸，接下來看反對者
+  if(!answered(op)) return null;
+  if(op===true){
+    return ['約窗口聊，了解反對者在意什麼，協助準備資訊幫忙說服內部','根據反對者的疑慮準備對應資料（成本、風險、比較）','主動詢問內部討論進度，適時補充案例或佐證','若反對意見仍未化解，評估要不要直接跟反對者對話'];
+  }
+  // op === false，無反對者，接下來看決策壓力
+  if(!answered(pr)) return null;
+  if(pr===false){
+    return ['分享同業案例或市場動態，建立「現在不做」的機會成本','了解對方年度預算或計畫時程，找到可能的時間點','提出限時誘因（優惠、資源、名額），創造決策誘因','若仍無壓力，考慮降低優先度，改為定期維護'];
+  }
+  return ['直接確認下一步：提案/報價/簽約，並約定具體時間','準備正式提案或合約，確認流程與所需文件','跟進進度，確認是否有新的疑慮浮現','推進簽約，準備收款與交接事項'];
+}
+
 // ══════════════════════════════════════
 // Pipeline 頁
 // ══════════════════════════════════════
-function renderPipeline(){
-  showPage('pipeline');
-  const q = document.getElementById('pipe-search')?.value?.toLowerCase()||'';
+// ══════════════════════════════════════
+// 左側客戶側欄
+// ══════════════════════════════════════
+function renderSidebar(){
+  const q = document.getElementById('sb-search')?.value?.toLowerCase()||'';
   let list = customers.filter(c=>{
     if(q && !c.name.toLowerCase().includes(q) && !(c.company||'').toLowerCase().includes(q)) return false;
-    if(activeFilters.size && !activeFilters.has(c.status)) return false;
     return true;
   });
+  const overdueCount = customers.filter(isOverdue).length;
+  const groups = STATUSES.map(s=>({status:s, items:list.filter(c=>c.status===s)})).filter(g=>g.items.length>0);
 
+  document.getElementById('sidebar-customers').innerHTML = `
+    <div class="sidebar-header">
+      <input class="sidebar-search" id="sb-search" type="text" placeholder="搜尋客戶或公司…" value="${q}" oninput="renderSidebar()">
+      <button class="btn btn-sm btn-primary" style="flex-shrink:0;padding:6px 10px;" onclick="openModal()" title="新增客戶"><i class="ti ti-plus"></i></button>
+    </div>
+    <div class="sidebar-stats">
+      <span>${customers.length} 位客戶</span>
+      ${overdueCount?`<span style="color:var(--red);">· ${overdueCount} 需跟進</span>`:''}
+    </div>
+    <div class="sidebar-list">
+      ${groups.length ? groups.map(g=>`
+        <div class="sidebar-group">
+          <div class="sidebar-group-header" onclick="toggleSidebarGroup('${g.status}')">
+            <i class="ti ti-chevron-${sidebarCollapsed[g.status]?'right':'down'}"></i>
+            <span>${g.status}</span>
+            <span class="sidebar-group-count">${g.items.length}</span>
+          </div>
+          ${sidebarCollapsed[g.status] ? '' : g.items.map(c=>sidebarItemHTML(c)).join('')}
+        </div>
+      `).join('') : `<div class="sidebar-empty">${customers.length?'沒有符合的客戶':'還沒有客戶<br>點右上角「+」新增'}</div>`}
+    </div>
+  `;
+}
+
+function sidebarItemHTML(c){
+  const col = avatarColor(c.name);
+  const od = isOverdue(c);
+  return `<div class="sidebar-item${currentCustomerId===c.id?' active':''}" onclick="openCustomer(${c.id})">
+    <div class="avatar" style="background:${col[0]};color:${col[1]}">${c.name.charAt(0)}</div>
+    <div class="sidebar-item-info">
+      <div class="sidebar-item-name">${c.name}${od?'<span class="sidebar-overdue-dot" title="超過 7 天未追蹤"></span>':''}</div>
+      <div class="sidebar-item-sub">${c.company||'—'} · ${c.status}</div>
+    </div>
+  </div>`;
+}
+
+// ══════════════════════════════════════
+// 右側總覽（未選擇客戶時）
+// ══════════════════════════════════════
+function showOverview(){
+  currentCustomerId = null;
+  renderSidebar();
+  renderOverview();
+}
+
+function renderOverview(){
   const totalAmt = customers.reduce((s,c)=>s+(c.amount||0),0);
   const signed = customers.filter(c=>c.status==='已簽約').length;
   const overdueCount = customers.filter(isOverdue).length;
-  const todayFU = customers.filter(hasTodayLog).length;
 
-  const chipHTML = (label, key) => {
-    const on = activeFilters.has(key) ? ` on-${key}` : '';
-    return `<span class="chip${on}" onclick="toggleFilter('${key}')">${label}</span>`;
-  };
-  const allOn = activeFilters.size===0 ? ' on-all' : '';
-
-  document.getElementById('page-pipeline').innerHTML = `
+  document.getElementById('main-panel').innerHTML = `
     <div class="pipeline-header">
       <div class="pipeline-title">我的 Pipeline</div>
       <div style="display:flex;gap:8px;flex-wrap:wrap;">
@@ -509,73 +658,130 @@ function renderPipeline(){
 
     ${overdueCount?`<div class="overdue-banner"><i class="ti ti-bell-ringing"></i>有 ${overdueCount} 個客戶超過 7 天沒有追蹤，建議今天發一封推進信。</div>`:''}
 
-    <div class="search-row">
-      <input class="search-input" id="pipe-search" type="text" placeholder="搜尋客戶或公司…" value="${q}" oninput="renderPipeline()">
-    </div>
-    <div class="filter-chips">
-      <span class="chip${allOn}" onclick="clearFilters()">全部</span>
-      ${STATUSES.map(s=>chipHTML(s,s)).join('')}
-    </div>
-
-    <div class="cust-list">
-      ${list.length ? list.map(c=>custCardHTML(c)).join('') : `<div class="empty-state"><i class="ti ti-users"></i><p>${customers.length?'沒有符合條件的客戶':'還沒有客戶，點右上角「新增客戶」開始'}</p></div>`}
+    <div class="empty-state" style="margin-top:2rem;">
+      <i class="ti ti-hand-click"></i>
+      <p>從左側選擇一位客戶查看詳情</p>
     </div>
   `;
 }
-
-function custCardHTML(c){
-  const col = avatarColor(c.name);
-  const q = calcQ(c.prob,c.cost);
-  const collected = calcCollected(c);
-  const last = lastLogDate(c);
-  const od = isOverdue(c);
-  const todayFU = hasTodayLog(c);
-  const preview = c.logs?.length ? `"${c.logs[0].text}"` : '尚無追蹤記錄';
-  return `<div class="cust-card${od?' overdue':''}" onclick="openCustomer(${c.id})">
-    <div class="cust-head">
-      <div class="avatar" style="background:${col[0]};color:${col[1]}">
-        ${c.name.charAt(0)}
-        ${todayFU?`<span class="av-dot"></span>`:''}
-      </div>
-      <div class="cust-info">
-        <div class="cust-name">${c.name}${c.title?`<span style="font-weight:400;font-size:12px;color:var(--text3);margin-left:6px;">${c.title}</span>`:''}</div>
-        <div class="cust-co">${c.company||'—'}</div>
-        <div class="cust-preview${od?' urgent':''}">${od?'⚠ ':''}${preview}</div>
-      </div>
-      <div class="cust-right">
-        <div style="display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end;">
-          <span class="badge badge-${c.status}">${c.status}</span>
-          ${c.abc?`<span class="badge badge-${c.abc}">${c.abc} 類</span>`:''}
-          ${q?`<span class="badge badge-${q}">${q}</span>`:''}
-        </div>
-        <div style="font-size:12px;color:var(--text3);">${c.amount?`NT$ ${Number(c.amount).toLocaleString()}`:''}${collected?` · 已收 NT$ ${Number(collected).toLocaleString()}`:''}</div>
-        <div class="cust-last">${last?`${last} · ${daysSince(last)}天前`:'尚未追蹤'}</div>
-      </div>
-    </div>
-  </div>`;
-}
-
-function toggleFilter(s){ activeFilters.has(s)?activeFilters.delete(s):activeFilters.add(s); renderPipeline(); }
-function clearFilters(){ activeFilters.clear(); renderPipeline(); }
 
 // ══════════════════════════════════════
 // 客戶詳情頁
 // ══════════════════════════════════════
 function openCustomer(id){
   currentCustomerId = id;
-  showPage('customer');
-  renderCustomer(id, 'diag');
+  renderSidebar();
+  renderCustomer(id, currentActiveTab||'diag');
+}
+
+// ── 階段進度條 ──
+const STAGE_FLOW = ['接觸中','建立信任','推進中','成交談判','已簽約'];
+
+// 陌開資料是否為空 —— 用來判斷「案子已經推進，但陌開研究還沒填」要不要提醒
+function isColdEmpty(c){
+  return !c.coldTarget && !c.coldBiz && !c.coldPain && !c.coldValue && !c.coldS1 && !c.coldS2 && !c.coldS3;
+}
+// 案子是否已經過了「建立信任」階段，卻還沒填陌開資料 —— 用來在分頁標籤上顯示警示點
+function coldNeedsAttention(c){
+  const idx = STAGE_FLOW.indexOf(c.status);
+  return idx >= 2 && isColdEmpty(c); // idx 2 = 推進中（含）以後
+}
+const STAGE_PCT = {'接觸中':10,'建立信任':25,'推進中':50,'成交談判':75,'已簽約':100};
+
+function stageBarHTML(c){
+  // 暫緩跟進：顯示灰階「暫停於 XX 階段」，不走一般進度條
+  if(c.status==='暫緩跟進'){
+    const last = c.pausedAt || '建立信任'; // 停在哪個階段的記憶，預設抓建立信任
+    return `
+    <div class="stage-bar-wrap stage-paused-wrap">
+      <div class="stage-bar">
+        ${STAGE_FLOW.map((s,i)=>{
+          const idx = STAGE_FLOW.indexOf(last);
+          const cls = i<=idx ? 'paused' : '';
+          return `
+          <div class="stage-step ${cls}" onclick="setField(${c.id},'status','${s}')">
+            <div class="stage-dot">${i<=idx?'—':STAGE_PCT[s]}</div>
+            <div class="stage-pct">${STAGE_PCT[s]}%</div>
+            <div class="stage-label">${s}</div>
+          </div>
+          ${i<STAGE_FLOW.length-1?`<div class="stage-line ${i<idx?'done':''}"></div>`:''}`;
+        }).join('')}
+      </div>
+      <div class="stage-paused-tag">⏸ 暫緩跟進，停在「${last}」</div>
+    </div>`;
+  }
+
+  const curIdx = STAGE_FLOW.indexOf(c.status);
+  return `
+  <div class="stage-bar-wrap">
+    <div class="stage-bar">
+      ${STAGE_FLOW.map((s,i)=>{
+        let cls = '';
+        if(i<curIdx) cls='done'; else if(i===curIdx) cls='current';
+        return `
+        <div class="stage-step ${cls}" onclick="setField(${c.id},'status','${s}')">
+          <div class="stage-dot">${i<curIdx?'<i class=\"ti ti-check\"></i>':STAGE_PCT[s]}</div>
+          <div class="stage-pct">${STAGE_PCT[s]}%</div>
+          <div class="stage-label">${s}</div>
+        </div>
+        ${i<STAGE_FLOW.length-1?`<div class="stage-line ${i<curIdx?'done':''}"></div>`:''}`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+
+// ── 左側摘要卡 ──
+// 欄位判斷依據（不是照搬 HubSpot 預設欄位，是照 Roy 自己的 SI 賦能診斷框架選的）：
+// 1. 決策者已接觸：診斷框架裡最優先要確認的事，一般 CRM 不會有這格
+// 2. 客戶分類 A/B/C、象限判斷：工作坊教材裡的優先度框架，決定該不該花時間
+// 3. 上次追蹤天數：跟進節奏是否斷掉的警示
+// 4. 快速記錄：日誌是最高頻的操作，直接放在摘要卡，不用切到日誌分頁才能記
+function summaryCardHTML(c){
+  const q = calcQ(c.prob,c.cost);
+  const collected = calcCollected(c);
+  const last = lastLogDate(c);
+  const od = isOverdue(c);
+  return `
+  <div class="summary-sec-title">關鍵狀態</div>
+  <div class="summary-row"><span class="summary-label">決策者已接觸</span><span class="summary-val" style="color:${c.diagDM===true?'var(--green)':c.diagDM===false?'var(--red)':'var(--text3)'}">${c.diagDM===true?'是':c.diagDM===false?'否':'未確認'}</span></div>
+  <div class="summary-row"><span class="summary-label" title="A＝有需求+有預算+有時間表｜B＝有需求但預算或時程不確定｜C＝需求薄弱、多次接觸沒進展" style="cursor:help;border-bottom:1px dotted var(--text3);">客戶分類 <i class="ti ti-info-circle" style="font-size:11px;"></i></span><span class="summary-val">${c.abc?`${c.abc} 類`:'未分類'}</span></div>
+  <div class="summary-row"><span class="summary-label">象限判斷</span><span class="summary-val" style="font-size:12px;${q?'cursor:help;border-bottom:1px dotted var(--text3);':''}" ${q?`title="${Q_DESC_FULL[q]}"`:''}>${q?`${q}｜${Q_DESC[q]||''}`:'未評分'}</span></div>
+  <div class="summary-row"><span class="summary-label">上次追蹤</span><span class="summary-val" style="${od?'color:var(--red)':''}">${last?`${daysSince(last)} 天前`:'尚未追蹤'}</span></div>
+
+  <div class="summary-sec-title">合約金額</div>
+  <div class="summary-row"><span class="summary-label">合約總額</span><span class="summary-val">NT$ ${(c.amount||0).toLocaleString()}</span></div>
+  <div class="summary-row"><span class="summary-label">已收 / 待收</span><span class="summary-val" style="font-size:12px;">${collected.toLocaleString()} / ${((c.amount||0)-collected).toLocaleString()}</span></div>
+
+  <div class="summary-sec-title">快速記錄</div>
+  <div class="quick-log-box">
+    <input class="quick-log-input" id="qlog-${c.id}" type="text" placeholder="記錄這次互動…" onkeydown="if(event.key==='Enter')quickAddLog(${c.id})">
+    <button class="btn btn-sm btn-primary quick-log-btn" onclick="quickAddLog(${c.id})"><i class="ti ti-plus"></i> 記錄</button>
+    ${last?`<div class="quick-log-preview">最近："${(c.logs[0].text||'').slice(0,40)}"</div>`:''}
+  </div>
+  `;
+}
+function quickAddLog(id){
+  const el = document.getElementById('qlog-'+id);
+  if(!el || !el.value.trim()) return;
+  const c = getC(id);
+  if(!c.logs) c.logs = [];
+  c.logs.unshift({id:nextLogId++, date:TODAY, text:el.value.trim()});
+  c.updatedAt = TODAY;
+  save();
+  renderCustomer(id, currentActiveTab||'diag');
+  renderSidebar();
+  showToast('✓ 已記錄');
 }
 
 function renderCustomer(id, activeTab){
   const c = getC(id);
-  if(!c) return;
-  const col = avatarColor(c.name);
+  if(!c){ showOverview(); return; }
+  currentActiveTab = activeTab;
   const rec = getRecommendation(c);
 
-  document.getElementById('page-customer').innerHTML = `
+  document.getElementById('main-panel').innerHTML = `
     <div class="cust-page-header">
-      <button class="back-btn" onclick="renderPipeline()"><i class="ti ti-arrow-left"></i> Pipeline</button>
+      <button class="back-btn" onclick="showOverview()"><i class="ti ti-arrow-left"></i> Pipeline</button>
       <div>
         <div class="cust-page-title">${c.name}${c.company?` · ${c.company}`:''}</div>
         <div class="cust-page-sub">${c.title||''}${c.title&&c.contact?' · ':''}${c.contact||''}</div>
@@ -586,19 +792,28 @@ function renderCustomer(id, activeTab){
       </div>
     </div>
 
-    <div class="tab-nav">
-      ${['diag','cold','push','priority','log'].map((t,i)=>{
-        const labels = ['診斷','陌開','推進','優先度','日誌'];
-        return `<button class="tab-btn${activeTab===t?' active':''}" onclick="renderCustomer(${id},'${t}')">${labels[i]}</button>`;
-      }).join('')}
-    </div>
+    ${stageBarHTML(c)}
 
-    <div id="tab-content-area">
-      ${activeTab==='diag' ? diagHTML(c,rec) : ''}
-      ${activeTab==='cold' ? coldHTML(c) : ''}
-      ${activeTab==='push' ? pushHTML(c) : ''}
-      ${activeTab==='priority' ? priorityHTML(c) : ''}
-      ${activeTab==='log' ? logHTML(c) : ''}
+    <div class="detail-body">
+      <div class="detail-sidebar">
+        ${summaryCardHTML(c)}
+      </div>
+      <div class="detail-main">
+        <div class="tab-nav">
+          ${['diag','cold','push','priority','log'].map((t,i)=>{
+            const labels = ['診斷','陌開','推進','優先度','日誌'];
+            const warn = (t==='cold' && coldNeedsAttention(c)) ? '<span class="tab-warn-dot" title="案子已推進，但陌開資料還沒填"></span>' : '';
+            return `<button class="tab-btn${activeTab===t?' active':''}" onclick="renderCustomer(${id},'${t}')">${labels[i]}${warn}</button>`;
+          }).join('')}
+        </div>
+        <div id="tab-content-area">
+          ${activeTab==='diag' ? diagHTML(c,rec) : ''}
+          ${activeTab==='cold' ? coldHTML(c) : ''}
+          ${activeTab==='push' ? pushHTML(c) : ''}
+          ${activeTab==='priority' ? priorityHTML(c) : ''}
+          ${activeTab==='log' ? logHTML(c) : ''}
+        </div>
+      </div>
     </div>
   `;
 }
@@ -606,7 +821,7 @@ function renderCustomer(id, activeTab){
 // ── 診斷 Tab ──
 function diagHTML(c, rec){
   const stuck = c.diagStuck||[];
-  const STUCK_OPTIONS = ['陌開沒回應','客戶有興趣但沒急迫性','提案後沒消息','沒接觸到 Decision Maker','沒有確認「下一步」','價格/條款談不攏','決策流程拖延','競品介入'];
+  const STUCK_OPTIONS = ['陌開沒回應','客戶有興趣但沒急迫性','提案後沒消息','沒接觸到決策者','沒有確認「下一步」','價格/條款談不攏','決策流程拖延','競品介入'];
   return `
   <div class="sec">
     <div class="sec-title">漏斗階段</div>
@@ -643,7 +858,7 @@ function diagHTML(c, rec){
     <div class="sec-title">其他診斷資訊</div>
     <div class="field-group">
       <div class="field-row">
-        <span class="field-label">DM 已接觸</span>
+        <span class="field-label">決策者已接觸</span>
         <div style="display:flex;gap:8px;align-items:center;padding:8px 14px;">
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="dm-${c.id}" value="1" ${c.diagDM?'checked':''} onchange="setField(${c.id},'diagDM',true)"> 是</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="dm-${c.id}" value="0" ${c.diagDM===false?'checked':''} onchange="setField(${c.id},'diagDM',false)"> 否</label>
@@ -690,7 +905,7 @@ function coldHTML(c){
       <div class="field-row"><span class="field-label">發送平台</span>
         <select class="field-select" onchange="setField(${c.id},'coldPlatform',this.value)">
           <option value="">選擇平台</option>
-          ${['LinkedIn DM','Email','電話','WhatsApp','Line'].map(p=>`<option ${c.coldPlatform===p?'selected':''}>${p}</option>`).join('')}
+          ${['LinkedIn 私訊','Email','電話','WhatsApp','Line'].map(p=>`<option ${c.coldPlatform===p?'selected':''}>${p}</option>`).join('')}
         </select>
       </div>
     </div>
@@ -723,12 +938,13 @@ function coldHTML(c){
 function pushHTML(c){
   const PLAN_KEYS = ['day1','day3to5','day7','day10to14'];
   const PLAN_LABELS = ['Day 1（今天）','Day 3–5','Day 7','Day 10–14'];
+  const suggest = pushPlanSuggest(c);
   return `
   <div class="sec">
     <div class="sec-title">三個關鍵推進問題</div>
     <div class="field-group">
       <div class="field-row">
-        <span class="field-label">DM 接觸到了嗎？</span>
+        <span class="field-label">決策者接觸到了嗎？</span>
         <div style="display:flex;gap:8px;align-items:center;padding:8px 14px;">
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="pdm-${c.id}" value="1" ${c.pushDM===true?'checked':''} onchange="setField(${c.id},'pushDM',true)"> 是</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="pdm-${c.id}" value="0" ${c.pushDM===false?'checked':''} onchange="setField(${c.id},'pushDM',false)"> 否</label>
@@ -752,32 +968,13 @@ function pushHTML(c){
   </div>
 
   <div class="sec">
-    <div class="sec-title">2 週推進計畫</div>
+    <div class="sec-title">2 週推進計畫${suggest?'<span style="font-weight:400;color:var(--text3);font-size:11px;margin-left:6px;">（已根據上面的回答帶入建議，仍可自行編輯）</span>':''}</div>
     <div class="field-group">
       ${PLAN_KEYS.map((k,i)=>`
         <div class="field-row">
           <span class="field-label">${PLAN_LABELS[i]}</span>
-          <input class="field-input" value="${(c.pushPlan||{})[k]||''}" placeholder="推進動作…" onblur="setPushPlan(${c.id},'${k}',this.value)">
+          <input class="field-input" value="${(c.pushPlan||{})[k]||''}" placeholder="${suggest?suggest[i]:'推進動作…'}" onblur="setPushPlan(${c.id},'${k}',this.value)">
         </div>`).join('')}
-    </div>
-  </div>
-
-  <div class="sec">
-    <div class="sec-title">推進信（選類型後填寫）</div>
-    <div class="field-group">
-      <div class="field-row">
-        <span class="field-label">類型</span>
-        <select class="field-select" onchange="setField(${c.id},'pushLetterType',this.value)">
-          <option value="">選擇類型</option>
-          <option ${c.pushLetterType==='A'?'selected':''} value="A">Type A｜提供價值型（分享案例/資料）</option>
-          <option ${c.pushLetterType==='B'?'selected':''} value="B">Type B｜詢問需求型（確認顧慮）</option>
-          <option ${c.pushLetterType==='C'?'selected':''} value="C">Type C｜提出下一步型（約 meeting）</option>
-        </select>
-      </div>
-      <div class="field-row">
-        <span class="field-label">推進信內容</span>
-        <textarea class="field-textarea" style="min-height:100px;" placeholder="Hi [名字]，…" onblur="setField(${c.id},'pushLetter',this.value)">${c.pushLetter||''}</textarea>
-      </div>
     </div>
   </div>`;
 }
@@ -799,7 +996,7 @@ function priorityHTML(c){
       <div class="score-row">
         <div class="score-item"><span class="score-label">成交可能性</span><input class="score-input" id="prob-${c.id}" type="number" min="1" max="5" step="0.5" value="${c.prob||''}" placeholder="1-5" onchange="saveScore(${c.id})"></div>
         <div class="score-item"><span class="score-label">投入成本</span><input class="score-input" id="cost-${c.id}" type="number" min="1" max="5" step="0.5" value="${c.cost||''}" placeholder="1-5" onchange="saveScore(${c.id})"></div>
-        <div id="qdisplay-${c.id}">${q?`<span class="badge badge-${q}">${Q_DESC[q]}</span>`:'<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>'}</div>
+        <div id="qdisplay-${c.id}">${q?`<span class="badge badge-${q}" title="${Q_DESC_FULL[q]}" style="cursor:help;">${Q_DESC[q]}</span>`:'<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>'}</div>
       </div>
     </div>
   </div>
@@ -899,11 +1096,16 @@ function logHTML(c){
 // ══════════════════════════════════════
 function setField(id, field, val){
   const c = getC(id);
+  if(field==='status'){
+    if(val==='暫緩跟進' && c.status!=='暫緩跟進'){
+      c.pausedAt = STAGE_FLOW.includes(c.status) ? c.status : '建立信任';
+    }
+  }
   c[field] = val;
   c.updatedAt = TODAY;
   save();
-  if(field==='status' || field==='diagDM' || field==='diagOver2W'){
-    renderCustomer(id, 'diag');
+  if(field==='status' || field==='diagDM' || field==='diagOver2W' || field==='pushDM' || field==='pushPressure' || field==='pushOpponent'){
+    renderCustomer(id, currentActiveTab||'diag');
   }
 }
 function toggleStuck(id, opt, checked){
@@ -935,7 +1137,7 @@ function saveScore(id){
   save();
   const q = calcQ(c.prob, c.cost);
   const el = document.getElementById('qdisplay-'+id);
-  if(el) el.innerHTML = q ? `<span class="badge badge-${q}">${Q_DESC[q]}</span>` : '<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>';
+  if(el) el.innerHTML = q ? `<span class="badge badge-${q}" title="${Q_DESC_FULL[q]}" style="cursor:help;">${Q_DESC[q]}</span>` : '<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>';
 }
 function saveAmount(id){
   const c = getC(id);
@@ -1080,23 +1282,15 @@ function saveCustomer(){
     customers.unshift({id:nextId++,...data,invoice:defaultInvoice(),logs:[],prob:'',cost:'',signedDate:''});
   }
   save(); closeModal();
-  if(editingId){ renderCustomer(editingId,'diag'); }
-  else { renderPipeline(); }
+  if(editingId){ renderCustomer(editingId, currentActiveTab||'diag'); }
+  else { showOverview(); }
   showToast(editingId?'已更新客戶資料':'✓ 新增客戶成功');
 }
 function deleteCustomer(id){
   if(!confirm('確定刪除？')) return;
   customers = customers.filter(c=>c.id!==id);
-  save(); renderPipeline();
+  save(); showOverview();
   showToast('已刪除');
-}
-
-// ══════════════════════════════════════
-// 頁面切換
-// ══════════════════════════════════════
-function showPage(name){
-  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
-  document.getElementById('page-'+name)?.classList.add('active');
 }
 
 // ══════════════════════════════════════
@@ -1136,7 +1330,7 @@ function importJSON(e){
       if(!confirm(`確定匯入 ${arr.length} 筆客戶資料？現有資料將被覆蓋。`)) return;
       customers = arr;
       nextId = Math.max(0,...customers.map(c=>c.id))+1;
-      save(); renderPipeline();
+      save(); showOverview();
       showToast(`✓ 已匯入 ${arr.length} 筆客戶`);
     } catch { showToast('檔案格式錯誤'); }
   };
@@ -1145,7 +1339,7 @@ function importJSON(e){
 }
 
 // 初始化
-if(sessionStorage.getItem('bds_auth')==='1') renderPipeline();
+if(sessionStorage.getItem('bds_auth')==='1') showOverview();
 </script>
 </body>
 </html>
