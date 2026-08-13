@@ -408,8 +408,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 <div id="modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModal()">
   <div class="modal">
     <h3 id="modal-title">新增客戶</h3>
-    <div class="field"><label>客戶姓名 *</label><input id="f-name" type="text" placeholder="王小明"></div>
-    <div class="field"><label>公司名稱</label><input id="f-company" type="text" placeholder="ABC 科技有限公司"></div>
+    <div class="field"><label>客戶公司 *</label><input id="f-company" type="text" placeholder="ABC 科技有限公司"></div>
+    <div class="field"><label>窗口姓名</label><input id="f-name" type="text" placeholder="王小明"><div class="field-hint">這是你在這家公司接觸的聯絡人，「客戶」指的是上面的公司本身</div></div>
     <div class="field"><label>職稱</label><input id="f-title" type="text" placeholder="採購經理 / CTO"></div>
     <div class="field"><label>聯絡方式</label><input id="f-contact" type="text" placeholder="email / 電話 / LINE"></div>
     <div class="field"><label>漏斗階段</label>
@@ -615,13 +615,13 @@ function renderSidebar(){
 }
 
 function sidebarItemHTML(c){
-  const col = avatarColor(c.name);
+  const col = avatarColor(c.company||c.name);
   const od = isOverdue(c);
   return `<div class="sidebar-item${currentCustomerId===c.id?' active':''}" onclick="openCustomer(${c.id})">
-    <div class="avatar" style="background:${col[0]};color:${col[1]}">${c.name.charAt(0)}</div>
+    <div class="avatar" style="background:${col[0]};color:${col[1]}">${(c.company||c.name).charAt(0)}</div>
     <div class="sidebar-item-info">
-      <div class="sidebar-item-name">${c.name}${od?'<span class="sidebar-overdue-dot" title="超過 7 天未追蹤"></span>':''}</div>
-      <div class="sidebar-item-sub">${c.company||'—'} · ${c.status}</div>
+      <div class="sidebar-item-name">${c.company||'（未填公司）'}${od?'<span class="sidebar-overdue-dot" title="超過 7 天未追蹤"></span>':''}</div>
+      <div class="sidebar-item-sub">${c.name?`${c.name}・`:''}${c.status}</div>
     </div>
   </div>`;
 }
@@ -783,8 +783,8 @@ function renderCustomer(id, activeTab){
     <div class="cust-page-header">
       <button class="back-btn" onclick="showOverview()"><i class="ti ti-arrow-left"></i> Pipeline</button>
       <div>
-        <div class="cust-page-title">${c.name}${c.company?` · ${c.company}`:''}</div>
-        <div class="cust-page-sub">${c.title||''}${c.title&&c.contact?' · ':''}${c.contact||''}</div>
+        <div class="cust-page-title">${c.company||'（未填公司）'}</div>
+        <div class="cust-page-sub">${c.name?`窗口：${c.name}`:''}${c.name&&c.title?'・':''}${c.title||''}${(c.name||c.title)&&c.contact?'・':''}${c.contact||''}</div>
       </div>
       <div class="cust-page-actions">
         <button class="btn btn-sm" onclick="openModal(${id})"><i class="ti ti-pencil"></i> 編輯</button>
@@ -1243,7 +1243,7 @@ function openModal(id=null){
   document.getElementById('modal-title').textContent = id ? '編輯客戶' : '新增客戶';
   if(id){
     const c = getC(id);
-    document.getElementById('f-name').value = c.name;
+    document.getElementById('f-name').value = c.name||'';
     document.getElementById('f-company').value = c.company||'';
     document.getElementById('f-title').value = c.title||'';
     document.getElementById('f-contact').value = c.contact||'';
@@ -1257,14 +1257,15 @@ function openModal(id=null){
     document.getElementById('f-abc').value = '';
   }
   document.getElementById('modal-bg').style.display = 'flex';
-  setTimeout(()=>document.getElementById('f-name').focus(), 50);
+  setTimeout(()=>document.getElementById('f-company').focus(), 50);
 }
 function closeModal(){ document.getElementById('modal-bg').style.display='none'; editingId=null; }
 function saveCustomer(){
+  const company = document.getElementById('f-company').value.trim();
+  if(!company){ document.getElementById('f-company').focus(); return; }
   const name = document.getElementById('f-name').value.trim();
-  if(!name){ document.getElementById('f-name').focus(); return; }
   const data = {
-    name, company:document.getElementById('f-company').value.trim(),
+    name, company,
     title:document.getElementById('f-title').value.trim(),
     contact:document.getElementById('f-contact').value.trim(),
     status:document.getElementById('f-status').value,
@@ -1298,17 +1299,17 @@ function deleteCustomer(id){
 // ══════════════════════════════════════
 function exportExcel(){
   const wb = XLSX.utils.book_new();
-  const rows1 = [['客戶姓名','公司','職稱','聯絡方式','漏斗階段','客戶分類','成交可能性','投入成本','象限','合約金額','已收款','待收款','備註','最後更新']];
-  customers.forEach(c=>{ const q=calcQ(c.prob,c.cost),col=calcCollected(c); rows1.push([c.name,c.company||'',c.title||'',c.contact||'',c.status,c.abc?c.abc+'類':'',c.prob||'',c.cost||'',q?`${q} ${Q_DESC[q]||''}`.trim():'',c.amount||0,col,(c.amount||0)-col,c.note||'',c.updatedAt||TODAY]); });
+  const rows1 = [['客戶公司','窗口姓名','職稱','聯絡方式','漏斗階段','客戶分類','成交可能性','投入成本','象限','合約金額','已收款','待收款','備註','最後更新']];
+  customers.forEach(c=>{ const q=calcQ(c.prob,c.cost),col=calcCollected(c); rows1.push([c.company||'',c.name||'',c.title||'',c.contact||'',c.status,c.abc?c.abc+'類':'',c.prob||'',c.cost||'',q?`${q} ${Q_DESC[q]||''}`.trim():'',c.amount||0,col,(c.amount||0)-col,c.note||'',c.updatedAt||TODAY]); });
   const ws1 = XLSX.utils.aoa_to_sheet(rows1);
   ws1['!cols'] = [18,18,12,18,12,12,12,12,22,14,12,12,20,14].map(w=>({wch:w}));
   XLSX.utils.book_append_sheet(wb,ws1,'客戶總覽');
-  const rows2 = [['客戶','公司','日誌日期','追蹤記錄']];
-  customers.forEach(c=>(c.logs||[]).forEach(l=>rows2.push([c.name,c.company||'',l.date,l.text])));
+  const rows2 = [['客戶公司','窗口姓名','日誌日期','追蹤記錄']];
+  customers.forEach(c=>(c.logs||[]).forEach(l=>rows2.push([c.company||'',c.name||'',l.date,l.text])));
   const ws2 = XLSX.utils.aoa_to_sheet(rows2); ws2['!cols']=[{wch:18},{wch:20},{wch:12},{wch:60}];
   XLSX.utils.book_append_sheet(wb,ws2,'追蹤日誌');
-  const rows3 = [['客戶','公司','款項','已開票','已收款','預計收款日','金額']];
-  customers.forEach(c=>{ if(!c.invoice?.payments) return; c.invoice.payments.forEach(p=>rows3.push([c.name,c.company||'',p.label,p.invoiced?'是':'否',p.collected?'是':'否',p.incomeDate||'',p.amount||0])); });
+  const rows3 = [['客戶公司','窗口姓名','款項','已開票','已收款','預計收款日','金額']];
+  customers.forEach(c=>{ if(!c.invoice?.payments) return; c.invoice.payments.forEach(p=>rows3.push([c.company||'',c.name||'',p.label,p.invoiced?'是':'否',p.collected?'是':'否',p.incomeDate||'',p.amount||0])); });
   const ws3 = XLSX.utils.aoa_to_sheet(rows3); ws3['!cols']=[{wch:18},{wch:20},{wch:10},{wch:10},{wch:10},{wch:14},{wch:14}];
   XLSX.utils.book_append_sheet(wb,ws3,'收款明細');
   XLSX.writeFile(wb,`BD成交系統_${TODAY}.xlsx`);
