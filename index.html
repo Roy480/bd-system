@@ -252,6 +252,13 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .s-btn.sel-已簽約 { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; font-weight: 600; }
 .s-btn.sel-暫緩跟進 { background: #f5f5f5; color: #555; border-color: #bbb; font-weight: 600; }
 
+/* 診斷狀態切換：推進中/卡住/PoC中 */
+.dstate-btns { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 14px; }
+.dstate-btn { padding: 4px 14px; border-radius: 99px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; background: var(--bg2); color: var(--text2); font-family: var(--font); transition: all .12s; }
+.dstate-btn.sel-推進中 { background: #e8f5e9; color: #1b5e20; border-color: #a5d6a7; font-weight: 600; }
+.dstate-btn.sel-卡住 { background: #ffebee; color: #b71c1c; border-color: #ef9a9a; font-weight: 600; }
+.dstate-btn.sel-PoC中 { background: #e3f2fd; color: #0d47a1; border-color: #90caf9; font-weight: 600; }
+
 /* ABC */
 .abc-btns { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 14px; }
 .abc-btn { padding: 4px 14px; border-radius: 99px; border: 1px solid var(--border); font-size: 12px; cursor: pointer; background: var(--bg2); color: var(--text2); font-family: var(--font); transition: all .12s; }
@@ -822,6 +829,10 @@ function renderCustomer(id, activeTab){
 function diagHTML(c, rec){
   const stuck = c.diagStuck||[];
   const STUCK_OPTIONS = ['陌開沒回應','客戶有興趣但沒急迫性','提案後沒消息','沒接觸到決策者','沒有確認「下一步」','價格/條款談不攏','決策流程拖延','競品介入'];
+  // 相容舊資料：沒設過狀態的話，如果已經勾了卡住原因就當作「卡住」，否則預設「推進中」
+  const dstate = c.diagState || (stuck.length ? '卡住' : '推進中');
+  const poc = c.diagPoC || {};
+
   return `
   <div class="sec">
     <div class="sec-title">漏斗階段</div>
@@ -842,6 +853,16 @@ function diagHTML(c, rec){
   </div>
 
   <div class="sec">
+    <div class="sec-title">目前狀態</div>
+    <div class="field-group">
+      <div class="dstate-btns">
+        ${['推進中','卡住','PoC中'].map(s=>`<button class="dstate-btn${dstate===s?` sel-${s}`:''}" onclick="setField(${c.id},'diagState','${s}')">${s}</button>`).join('')}
+      </div>
+    </div>
+  </div>
+
+  ${dstate==='卡住' ? `
+  <div class="sec">
     <div class="sec-title">你認為卡住的原因</div>
     <div class="field-group">
       <div class="check-group">
@@ -852,7 +873,26 @@ function diagHTML(c, rec){
           </label>`).join('')}
       </div>
     </div>
-  </div>
+  </div>` : ''}
+
+  ${dstate==='PoC中' ? `
+  <div class="sec">
+    <div class="sec-title">PoC 驗證資訊</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">PoC 開始日</span>
+        <input class="field-input" type="date" value="${poc.startDate||''}" onchange="setPoCField(${c.id},'startDate',this.value)">
+      </div>
+      <div class="field-row">
+        <span class="field-label">預計結束日</span>
+        <input class="field-input" type="date" value="${poc.endDate||''}" onchange="setPoCField(${c.id},'endDate',this.value)">
+      </div>
+      <div class="field-row">
+        <span class="field-label">成功標準</span>
+        <textarea class="field-textarea" placeholder="怎樣算 PoC 通過？寫下具體、可驗證的標準…" onblur="setPoCField(${c.id},'criteria',this.value)">${poc.criteria||''}</textarea>
+      </div>
+    </div>
+  </div>` : ''}
 
   <div class="sec">
     <div class="sec-title">其他診斷資訊</div>
@@ -864,13 +904,14 @@ function diagHTML(c, rec){
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="dm-${c.id}" value="0" ${c.diagDM===false?'checked':''} onchange="setField(${c.id},'diagDM',false)"> 否</label>
         </div>
       </div>
+      ${dstate==='卡住' ? `
       <div class="field-row">
         <span class="field-label">卡超過 2 週</span>
         <div style="display:flex;gap:8px;align-items:center;padding:8px 14px;">
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="ov-${c.id}" value="1" ${c.diagOver2W?'checked':''} onchange="setField(${c.id},'diagOver2W',true)"> 是</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="ov-${c.id}" value="0" ${c.diagOver2W===false?'checked':''} onchange="setField(${c.id},'diagOver2W',false)"> 否</label>
         </div>
-      </div>
+      </div>` : ''}
       <div class="field-row">
         <span class="field-label">客戶說的話</span>
         <textarea class="field-textarea" placeholder="寫下客戶原話…" onblur="setField(${c.id},'diagQuote',this.value)">${c.diagQuote||''}</textarea>
@@ -1104,9 +1145,16 @@ function setField(id, field, val){
   c[field] = val;
   c.updatedAt = TODAY;
   save();
-  if(field==='status' || field==='diagDM' || field==='diagOver2W' || field==='pushDM' || field==='pushPressure' || field==='pushOpponent'){
+  if(field==='status' || field==='diagDM' || field==='diagOver2W' || field==='pushDM' || field==='pushPressure' || field==='pushOpponent' || field==='diagState'){
     renderCustomer(id, currentActiveTab||'diag');
   }
+}
+function setPoCField(id, key, val){
+  const c = getC(id);
+  if(!c.diagPoC) c.diagPoC = {};
+  c.diagPoC[key] = val;
+  c.updatedAt = TODAY;
+  save();
 }
 function toggleStuck(id, opt, checked){
   const c = getC(id);
