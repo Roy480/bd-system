@@ -130,6 +130,17 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .btn-primary:hover { opacity: .9; }
 .btn-sm { padding: 5px 11px; font-size: 12px; }
 
+/* 業績目標卡 */
+.goals-card { background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 1.25rem; }
+.goals-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.goals-card-title { font-size: 13px; font-weight: 700; color: var(--text2); }
+.goals-row { margin-bottom: 12px; }
+.goals-row:last-child { margin-bottom: 0; }
+.goals-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
+.goals-bar-wrap { width: 100%; height: 8px; background: var(--bg2); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
+.goals-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #8b7ee8); border-radius: 99px; transition: width .2s; }
+.goals-nums { font-size: 13px; font-weight: 600; color: var(--text); }
+
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.25rem; }
 .stat-card { background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 12px; text-align: center; }
 .stat-num { font-size: 22px; font-weight: 600; }
@@ -507,6 +518,73 @@ let customers = JSON.parse(localStorage.getItem('bds_v1')||'[]');
 let nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
 let nextLogId = 2000;
 let currentCustomerId = null;
+let goals = JSON.parse(localStorage.getItem('bds_goals')||'{}');
+let goalsEditMode = false;
+
+function getYearKey(d){ return String(new Date(d).getFullYear()); }
+function getQuarterKey(d){ const dt=new Date(d); const q=Math.floor(dt.getMonth()/3)+1; return `${dt.getFullYear()}-Q${q}`; }
+function saveGoals(){ localStorage.setItem('bds_goals', JSON.stringify(goals)); }
+function computeAchieved(){
+  const curYear = getYearKey(TODAY), curQKey = getQuarterKey(TODAY);
+  let yearAmt=0, qAmt=0;
+  customers.forEach(c=>{
+    if(c.status==='已簽約' && c.signedDate){
+      if(getYearKey(c.signedDate)===curYear) yearAmt+=(c.amount||0);
+      if(getQuarterKey(c.signedDate)===curQKey) qAmt+=(c.amount||0);
+    }
+  });
+  return { yearAmt, qAmt, curYear, curQKey };
+}
+function toggleGoalsEdit(){ goalsEditMode = !goalsEditMode; renderOverview(); }
+function saveGoalsInput(){
+  const annualVal = parseFloat(document.getElementById('goal-annual').value)||0;
+  const qVal = parseFloat(document.getElementById('goal-quarter').value)||0;
+  const { curYear, curQKey } = computeAchieved();
+  if(!goals.annual) goals.annual = {};
+  if(!goals.quarterly) goals.quarterly = {};
+  goals.annual[curYear] = annualVal;
+  goals.quarterly[curQKey] = qVal;
+  saveGoals();
+  goalsEditMode = false;
+  renderOverview();
+}
+function goalsCardHTML(){
+  const { yearAmt, qAmt, curYear, curQKey } = computeAchieved();
+  const annualTarget = (goals.annual && goals.annual[curYear]) || 0;
+  const quarterTarget = (goals.quarterly && goals.quarterly[curQKey]) || 0;
+  const annualPct = annualTarget ? Math.min(100, Math.round(yearAmt/annualTarget*100)) : 0;
+  const qPct = quarterTarget ? Math.min(100, Math.round(qAmt/quarterTarget*100)) : 0;
+  const fmt = n => n>=10000 ? Math.round(n/10000)+'萬' : n.toLocaleString();
+
+  if(goalsEditMode){
+    return `<div class="goals-card">
+      <div class="goals-card-title">設定業績目標</div>
+      <div class="field-row"><span class="field-label">${curYear} 年度目標（NTD）</span><input class="field-input" id="goal-annual" type="number" value="${annualTarget||''}" placeholder="0"></div>
+      <div class="field-row"><span class="field-label">${curQKey} 季度目標（NTD）</span><input class="field-input" id="goal-quarter" type="number" value="${quarterTarget||''}" placeholder="0"></div>
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-sm btn-primary" onclick="saveGoalsInput()">儲存</button>
+        <button class="btn btn-sm" onclick="toggleGoalsEdit()">取消</button>
+      </div>
+    </div>`;
+  }
+
+  return `<div class="goals-card">
+    <div class="goals-card-header">
+      <div class="goals-card-title">業績目標</div>
+      <button class="topbar-icon-btn" style="color:var(--text3);" onclick="toggleGoalsEdit()" title="設定目標"><i class="ti ti-pencil"></i></button>
+    </div>
+    <div class="goals-row">
+      <div class="goals-label">${curQKey}｜本季</div>
+      <div class="goals-bar-wrap"><div class="goals-bar-fill" style="width:${qPct}%"></div></div>
+      <div class="goals-nums">NT$ ${fmt(qAmt)}${quarterTarget?` / NT$ ${fmt(quarterTarget)}（${qPct}%）`:'（尚未設定目標）'}</div>
+    </div>
+    <div class="goals-row">
+      <div class="goals-label">${curYear}｜本年</div>
+      <div class="goals-bar-wrap"><div class="goals-bar-fill" style="width:${annualPct}%"></div></div>
+      <div class="goals-nums">NT$ ${fmt(yearAmt)}${annualTarget?` / NT$ ${fmt(annualTarget)}（${annualPct}%）`:'（尚未設定目標）'}</div>
+    </div>
+  </div>`;
+}
 let currentActiveTab = 'diag';
 let sidebarCollapsed = {'已簽約':true,'暫緩跟進':true}; // 預設收合已完成/暫停的組，其他展開
 
@@ -655,6 +733,8 @@ function renderOverview(){
         <button class="btn btn-sm btn-primary" onclick="openModal()"><i class="ti ti-plus"></i> 新增客戶</button>
       </div>
     </div>
+
+    ${goalsCardHTML()}
 
     <div class="stats-grid">
       <div class="stat-card"><div class="stat-num primary">${customers.length}</div><div class="stat-label">追蹤中</div></div>
