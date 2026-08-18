@@ -130,6 +130,17 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .btn-primary:hover { opacity: .9; }
 .btn-sm { padding: 5px 11px; font-size: 12px; }
 
+/* 今日提醒卡 */
+.reminder-card { background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 1.25rem; }
+.reminder-group { margin-bottom: 14px; }
+.reminder-group:last-child { margin-bottom: 0; }
+.reminder-group-title { font-size: 13px; font-weight: 700; color: var(--text); display: flex; align-items: center; gap: 6px; }
+.reminder-count { background: var(--bg2); border-radius: 99px; padding: 0 7px; font-size: 11px; font-weight: 600; color: var(--text3); }
+.reminder-group-hint { font-size: 11px; color: var(--text3); margin: 2px 0 6px; }
+.reminder-pills { display: flex; flex-wrap: wrap; gap: 6px; }
+.reminder-pill { background: var(--bg2); border: 1px solid var(--border2); border-radius: 99px; padding: 3px 12px; font-size: 12px; color: var(--text2); cursor: pointer; transition: all .12s; }
+.reminder-pill:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
 /* 業績目標卡 */
 .goals-card { background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 1.25rem; }
 .goals-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
@@ -548,6 +559,56 @@ function saveGoalsInput(){
   goalsEditMode = false;
   renderOverview();
 }
+function computeTodayReminders(){
+  const needFollow = customers.filter(isOverdue);
+  const needCold = customers.filter(coldNeedsAttention);
+  const pocDue = customers.filter(c=>{
+    if(c.diagState!=='PoC中' || !c.diagPoC || !c.diagPoC.endDate) return false;
+    const days = Math.ceil((new Date(c.diagPoC.endDate) - new Date(TODAY)) / 86400000);
+    return days <= 3;
+  });
+  const needQuote = customers.filter(c=>{
+    return ['成交談判','已簽約'].includes(c.status) && c.invoice && c.invoice.payments && c.invoice.payments.some(p=>!p.invoiced);
+  });
+  const needDM = customers.filter(c=>{
+    return c.diagDM===false && ['推進中','成交談判'].includes(c.status);
+  });
+  return { needFollow, needCold, pocDue, needQuote, needDM };
+}
+
+function reminderPill(c){
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}</span>`;
+}
+
+function todayReminderHTML(){
+  const { needFollow, needCold, pocDue, needQuote, needDM } = computeTodayReminders();
+  const groups = [
+    { icon:'🔴', label:'需要跟進', hint:'超過 7 天沒追蹤', items:needFollow },
+    { icon:'📧', label:'該發陌開信', hint:'已推進但陌開資料還沒填', items:needCold },
+    { icon:'🎯', label:'PoC 快到期', hint:'預計結束日在 3 天內或已過期', items:pocDue },
+    { icon:'💰', label:'待報價/待開票', hint:'案子已進成交談判或已簽約，發票還沒開', items:needQuote },
+    { icon:'👤', label:'決策者未接觸', hint:'案子還在推進，但還沒接觸到決策者', items:needDM },
+  ].filter(g => g.items.length>0);
+
+  if(groups.length===0){
+    return `<div class="reminder-card">
+      <div class="goals-card-title">今日提醒</div>
+      <div style="color:var(--text3);font-size:13px;margin-top:6px;">今天沒有待處理的事項，狀況良好 🎉</div>
+    </div>`;
+  }
+
+  return `<div class="reminder-card">
+    <div class="goals-card-title" style="margin-bottom:12px;">今日提醒</div>
+    ${groups.map(g=>`
+      <div class="reminder-group">
+        <div class="reminder-group-title">${g.icon} ${g.label}<span class="reminder-count">${g.items.length}</span></div>
+        <div class="reminder-group-hint">${g.hint}</div>
+        <div class="reminder-pills">${g.items.map(reminderPill).join('')}</div>
+      </div>
+    `).join('')}
+  </div>`;
+}
+
 function goalsCardHTML(){
   const { yearAmt, qAmt, curYear, curQKey } = computeAchieved();
   const annualTarget = (goals.annual && goals.annual[curYear]) || 0;
@@ -733,6 +794,8 @@ function renderOverview(){
         <button class="btn btn-sm btn-primary" onclick="openModal()"><i class="ti ti-plus"></i> 新增客戶</button>
       </div>
     </div>
+
+    ${todayReminderHTML()}
 
     ${goalsCardHTML()}
 
