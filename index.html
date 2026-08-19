@@ -1206,7 +1206,7 @@ function priorityHTML(c){
 
   ${q==='Q4'?`
   <div class="sec">
-    <div class="sec-title">象限 4｜3 問快篩</div>
+    <div class="sec-title">3 問快篩</div>
     <div class="field-group">
       <div class="check-group">
         ${['合約金額 > 公司平均單 × 3 倍（或超過半年業績目標）→ 全力投入','業界標竿 / 未來有持續合作 / 老闆要求拿下 → 戰略投入','FAE/PM 願意投入 + 有現成方案 + 決策流程清楚 → 可以做（設時限）'].map((q4q,i)=>`
@@ -1345,9 +1345,7 @@ function saveScore(id){
   c.cost = document.getElementById('cost-'+id)?.value || '';
   c.updatedAt = TODAY;
   save();
-  const q = calcQ(c.prob, c.cost);
-  const el = document.getElementById('qdisplay-'+id);
-  if(el) el.innerHTML = q ? `<span class="badge badge-${q}" title="${Q_DESC_FULL[q]}" style="cursor:help;">${Q_DESC[q]}</span>` : '<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>';
+  renderCustomer(id, 'priority');
 }
 function saveAmount(id){
   const c = getC(id);
