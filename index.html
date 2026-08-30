@@ -143,6 +143,10 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .reminder-pills { display: flex; flex-wrap: wrap; gap: 6px; }
 .reminder-pill { background: var(--bg2); border: 1px solid var(--border2); border-radius: 99px; padding: 3px 12px; font-size: 12px; color: var(--text2); cursor: pointer; transition: all .12s; }
 .reminder-pill:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+.reminder-pill.tier-soon { background: #fff8e1; border-color: #ffe082; color: #e65100; }
+.reminder-pill.tier-tomorrow { background: #fff3e0; border-color: #ffb74d; color: #e65100; font-weight: 600; }
+.reminder-pill.tier-today { background: #ffebee; border-color: #ef5350; color: #c62828; font-weight: 700; }
+.reminder-more { background: none; border: none; font-size: 12px; color: var(--text3); cursor: pointer; text-decoration: underline; padding: 3px 4px; }
 
 /* 業績目標卡 */
 .goals-card { background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 1.25rem; }
@@ -573,33 +577,96 @@ function saveGoalsInput(){
 }
 function computeTodayReminders(){
   const needFollow = customers.filter(isOverdue);
+  const QUADRANT_TIER = { Q2:0, Q4:1, Q1:2, Q3:3 };
+  needFollow.sort((a,b)=>{
+    const qa = calcQ(a.prob, a.cost), qb = calcQ(b.prob, b.cost);
+    const ta = QUADRANT_TIER[qa] ?? 4, tb = QUADRANT_TIER[qb] ?? 4;
+    if(ta !== tb) return ta - tb;
+    return daysSince(lastLogDate(b)) - daysSince(lastLogDate(a));
+  });
   const needCold = customers.filter(coldNeedsAttention);
   const pocDue = customers.filter(c=>{
     if(c.diagState!=='PoC中' || !c.diagPoC || !c.diagPoC.endDate) return false;
     const days = Math.ceil((new Date(c.diagPoC.endDate) - new Date(TODAY)) / 86400000);
     return days <= 3;
   });
+  const needInvoice = customers.filter(c=>{
+    return c.status==='已簽約' && c.invoice && c.invoice.payments && c.invoice.payments.some(p=>!p.invoiced);
+  });
   const needQuote = customers.filter(c=>{
-    return ['成交談判','已簽約'].includes(c.status) && c.invoice && c.invoice.payments && c.invoice.payments.some(p=>!p.invoiced);
+    return STAGE_FLOW.indexOf(c.status) >= STAGE_FLOW.indexOf('推進中') && !(c.quote && c.quote.date);
   });
   const needDM = customers.filter(c=>{
     return c.diagDM===false && ['推進中','成交談判'].includes(c.status);
   });
-  return { needFollow, needCold, pocDue, needQuote, needDM };
+  const meetingSoon = customers.filter(c=>{
+    if(!c.nextMeeting || !c.nextMeeting.at) return false;
+    const diffDays = Math.ceil((new Date(c.nextMeeting.at) - new Date()) / 86400000);
+    return diffDays <= 3 && diffDays >= 0;
+  }).sort((a,b)=> new Date(a.nextMeeting.at) - new Date(b.nextMeeting.at));
+  return { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon };
+}
+
+const needsMeetingNote = c => ['推進中','成交談判','已簽約'].includes(c.status) && !(c.nextMeeting && c.nextMeeting.at);
+function formatMeetingTime(iso){
+  const d = new Date(iso);
+  return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
 function reminderPill(c){
   return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}</span>`;
 }
+const COLD_FIELD_LABELS = [
+  ['coldTarget','目標客戶'],
+  ['coldBiz','背景研究'],
+  ['coldPain','痛點分析'],
+  ['coldValue','提供價值'],
+];
+function coldMissingLabels(c){
+  const missing = COLD_FIELD_LABELS.filter(([key])=>!c[key]).map(([,label])=>label);
+  if(!c.coldS1 && !c.coldS2 && !c.coldS3) missing.push('陌開信文案');
+  return missing;
+}
+function coldPill(c){
+  const missing = coldMissingLabels(c);
+  const note = missing.length ? `<span style="color:var(--text3);font-weight:400;">（缺：${missing.join('、')}）</span>` : '';
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}${note}</span>`;
+}
+function followPill(c){
+  const note = needsMeetingNote(c) ? `<span style="color:var(--text3);font-weight:400;">（尚未安排下次會面）</span>` : '';
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}${note}</span>`;
+}
+function meetingPill(c){
+  const diffDays = Math.ceil((new Date(c.nextMeeting.at) - new Date()) / 86400000);
+  const tier = diffDays<=0 ? 'tier-today' : diffDays===1 ? 'tier-tomorrow' : 'tier-soon';
+  return `<span class="reminder-pill ${tier}" onclick="openCustomer(${c.id})">跟 ${c.company||c.name||'（未命名）'} 的會議 ${formatMeetingTime(c.nextMeeting.at)}</span>`;
+}
+
+function toggleReminderGroup(id, btn){
+  const el = document.getElementById(id);
+  if(!el) return;
+  const collapsed = el.style.display === 'none' || el.style.display === '';
+  el.style.display = collapsed ? 'contents' : 'none';
+  btn.textContent = collapsed ? '收起' : btn.dataset.moreText;
+}
+
+function quotePill(c){
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}</span>`;
+}
+function invoicePill(c){
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}</span>`;
+}
 
 function todayReminderHTML(){
-  const { needFollow, needCold, pocDue, needQuote, needDM } = computeTodayReminders();
+  const { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon } = computeTodayReminders();
   const groups = [
-    { icon:'🔴', label:'需要跟進', hint:'超過 7 天沒追蹤', items:needFollow },
-    { icon:'📝', label:'陌開待補齊', hint:'背景研究、痛點分析、陌開信文案，還沒填寫', items:needCold },
-    { icon:'🎯', label:'PoC 快到期', hint:'預計結束日在 3 天內或已過期', items:pocDue },
-    { icon:'💰', label:'待報價/待開票', hint:'案子已進成交談判或已簽約，發票還沒開', items:needQuote },
-    { icon:'👤', label:'決策者未接觸', hint:'案子還在推進，但還沒接觸到決策者', items:needDM },
+    { icon:'🔴', label:'需要跟進', hint:'超過 7 天沒追蹤', items:needFollow, render:followPill },
+    { icon:'🗓️', label:'會議提醒', hint:'即將到來的會面（3 天內）', items:meetingSoon, render:meetingPill },
+    { icon:'📝', label:'陌開資料未填', hint:'背景研究、痛點分析、陌開信文案，還沒填寫', items:needCold, render:coldPill },
+    { icon:'🎯', label:'PoC 快到期', hint:'預計結束日在 3 天內或已過期', items:pocDue, render:reminderPill },
+    { icon:'🔵', label:'待報價', hint:'案子已進推進中以後，但還沒報價', items:needQuote, render:quotePill },
+    { icon:'💰', label:'待開票', hint:'案子已簽約，發票還沒開', items:needInvoice, render:invoicePill },
+    { icon:'👤', label:'決策者未接觸', hint:'案子還在推進，但還沒接觸到決策者', items:needDM, render:reminderPill },
   ].filter(g => g.items.length>0);
 
   if(groups.length===0){
@@ -609,15 +676,25 @@ function todayReminderHTML(){
     </div>`;
   }
 
+  const CAP = 3;
   return `<div class="reminder-card">
     <div class="goals-card-title" style="margin-bottom:12px;">今日提醒</div>
-    ${groups.map(g=>`
+    ${groups.map((g,gi)=>{
+      const visible = g.items.slice(0, CAP);
+      const overflow = g.items.slice(CAP);
+      const groupId = `rg-${gi}`;
+      const moreText = `還有 ${overflow.length} 位，點開看全部`;
+      return `
       <div class="reminder-group">
         <div class="reminder-group-title">${g.icon} ${g.label}<span class="reminder-count">${g.items.length}</span></div>
         <div class="reminder-group-hint">${g.hint}</div>
-        <div class="reminder-pills">${g.items.map(reminderPill).join('')}</div>
-      </div>
-    `).join('')}
+        <div class="reminder-pills">
+          ${visible.map(g.render).join('')}
+          ${overflow.length ? `<span class="reminder-overflow" id="${groupId}" style="display:none;">${overflow.map(g.render).join('')}</span>` : ''}
+        </div>
+        ${overflow.length ? `<span class="reminder-more" data-more-text="${moreText}" onclick="toggleReminderGroup('${groupId}', this)">${moreText}</span>` : ''}
+      </div>`;
+    }).join('')}
   </div>`;
 }
 
@@ -1144,6 +1221,38 @@ function pushHTML(c){
   const suggest = pushPlanSuggest(c);
   return `
   <div class="sec">
+    <div class="sec-title">下次會面時間</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">日期時間</span>
+        <input type="datetime-local" class="field-input" value="${c.nextMeeting?.at||''}" onchange="setNextMeeting(${c.id},'at',this.value)">
+      </div>
+      <div class="field-row">
+        <span class="field-label">備註</span>
+        <input class="field-input" value="${c.nextMeeting?.note||''}" placeholder="會議主題、地點等" onblur="setNextMeeting(${c.id},'note',this.value)">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">報價</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">報價日期</span>
+        <input type="date" class="field-input" value="${c.quote?.date||''}" onchange="setQuoteField(${c.id},'date',this.value)">
+      </div>
+      <div class="field-row">
+        <span class="field-label">報價金額 NTD</span>
+        <input type="number" class="field-input" value="${c.quote?.amount||''}" placeholder="可能跟最終合約金額不同" onblur="setQuoteField(${c.id},'amount',this.value)">
+      </div>
+      <div class="field-row">
+        <span class="field-label">報價文件連結</span>
+        <input class="field-input" value="${c.quote?.link||''}" placeholder="報價單網址（選填）" onblur="setQuoteField(${c.id},'link',this.value)">
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
     <div class="sec-title">三個關鍵推進問題</div>
     <div class="field-group">
       <div class="field-row">
@@ -1336,6 +1445,20 @@ function setPushPlan(id, key, val){
   const c = getC(id);
   if(!c.pushPlan) c.pushPlan = {};
   c.pushPlan[key] = val;
+  c.updatedAt = TODAY;
+  save();
+}
+function setNextMeeting(id, key, val){
+  const c = getC(id);
+  if(!c.nextMeeting) c.nextMeeting = {};
+  c.nextMeeting[key] = val;
+  c.updatedAt = TODAY;
+  save();
+}
+function setQuoteField(id, key, val){
+  const c = getC(id);
+  if(!c.quote) c.quote = {};
+  c.quote[key] = val;
   c.updatedAt = TODAY;
   save();
 }
