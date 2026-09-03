@@ -2086,6 +2086,9 @@ function seedDemoGoals(){
   const q = Math.floor(new Date().getMonth()/3)+1;
   return { annual:{[String(y)]:12000000}, quarterly:{[`${y}-Q${q}`]:3000000} };
 }
+// 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
+// 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
+const DEMO_DATA_VERSION = 'v2-siPartner';
 function toggleDemoMode(){
   if(!demoMode){
     if(!confirm('切換到示範模式：畫面會換成假資料，適合投影展示。你的真實客戶資料不會受影響，之後可以隨時切回來。要切換嗎？')) return;
@@ -2095,13 +2098,15 @@ function toggleDemoMode(){
   demoMode = !demoMode;
   localStorage.setItem('bds_mode', demoMode ? 'demo' : 'real');
   customers = JSON.parse(localStorage.getItem(customersKey())||'[]');
-  if(demoMode && customers.length===0){
+  const storedVersion = localStorage.getItem('bds_demo_version');
+  if(demoMode && (customers.length===0 || storedVersion!==DEMO_DATA_VERSION)){
     customers = seedDemoData();
     save();
+    localStorage.setItem('bds_demo_version', DEMO_DATA_VERSION);
   }
   nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
   goals = JSON.parse(localStorage.getItem(goalsKey())||'{}');
-  if(demoMode && !goals.annual && !goals.quarterly){
+  if(demoMode && (!goals.annual && !goals.quarterly || storedVersion!==DEMO_DATA_VERSION)){
     goals = seedDemoGoals();
     saveGoals();
   }
@@ -2353,11 +2358,16 @@ function siRevenueCardHTML(){
   const { list, totalSigned, totalPipeline } = computeSIRevenue();
   if(list.length===0) return '';
   const fmt = n => n>=10000 ? Math.round(n/10000)+'萬' : n.toLocaleString();
+  const hasUnfilled = list.some(g=>g.name==='未填寫');
   return `<div class="goals-card">
     <div class="goals-card-header">
       <div class="goals-card-title">SI 通路佔比</div>
       <div style="font-size:11px;color:var(--text3);">已簽約營收 NT$ ${fmt(totalSigned)}｜Pipeline 總額 NT$ ${fmt(totalPipeline)}</div>
     </div>
+    ${hasUnfilled?`<div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2);border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
+      <span style="color:var(--text3);">還有案子沒填配合的 SI，可以先填占位字樣，之後想起來再改</span>
+      <button class="btn btn-sm" style="flex-shrink:0;" onclick="bulkFillPlaceholderSI()">一鍵填入「待確認」</button>
+    </div>`:''}
     ${list.map(g=>`
     <div class="goals-row">
       <div class="goals-label">${g.name}${g.name==='未填寫'?'<span style=\"color:var(--red);margin-left:4px;\">（建議補上配合的 SI）</span>':''}　${g.dealCount} 筆案子</div>
@@ -2365,6 +2375,17 @@ function siRevenueCardHTML(){
       <div class="goals-nums">已簽約 NT$ ${fmt(g.signedAmt)}${totalSigned?`（佔整體營收 ${g.signedPct}%）`:''}　｜　Pipeline NT$ ${fmt(g.pipelineAmt)}</div>
     </div>`).join('')}
   </div>`;
+}
+// 一鍵幫還沒填「配合的 SI」的案子填上「待確認」占位字樣，之後想起實際是哪家 SI 再自行點編輯修改。
+// 只補空白的，已經填過的案子完全不動，不會覆蓋掉你原本填的內容。
+function bulkFillPlaceholderSI(){
+  const targets = customers.filter(c=>!c.siPartner?.trim());
+  if(targets.length===0){ showToast('沒有需要填入的案子'); return; }
+  if(!confirm(`要幫 ${targets.length} 筆還沒填「配合的 SI」的案子，填入「待確認」這個占位字樣嗎？之後可以再點編輯改成實際的 SI 名稱。`)) return;
+  targets.forEach(c=>{ c.siPartner = '待確認'; c.updatedAt = TODAY; });
+  save();
+  showOverview();
+  showToast(`✓ 已幫 ${targets.length} 筆案子填入「待確認」`);
 }
 let currentActiveTab = 'diag';
 let sidebarCollapsed = {'已簽約':true,'暫緩跟進':true}; // 預設收合已完成/暫停的組，其他展開
