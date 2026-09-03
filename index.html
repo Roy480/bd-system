@@ -68,6 +68,8 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
 .topbar-badge { font-size: 11px; color: rgba(255,255,255,.8); background: rgba(255,255,255,.18); border-radius: 99px; padding: 3px 10px; }
 .topbar-icon-btn { background: none; border: none; color: rgba(255,255,255,.8); cursor: pointer; font-size: 18px; line-height: 1; padding: 4px; border-radius: 6px; display: flex; align-items: center; }
 .topbar-icon-btn:hover { color: #fff; background: rgba(255,255,255,.12); }
+body.demo-active .topbar { background: linear-gradient(135deg, #d97706 0%, #b45309 100%); }
+body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:700; }
 
 .main-body { flex: 1; display: flex; min-height: 0; }
 
@@ -425,10 +427,11 @@ body { font-family: var(--font); background: var(--bg); color: var(--text); min-
   <div class="topbar">
     <img class="topbar-avatar" src="data:image/png;base64,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" alt="avatar">
     <div class="topbar-logo">BD<span>.</span></div>
-    <div class="topbar-badge"><i class="ti ti-user" style="font-size:10px;margin-right:3px;"></i>個人版</div>
+    <div class="topbar-badge" id="mode-badge"><i class="ti ti-user" style="font-size:10px;margin-right:3px;"></i>個人版</div>
     <div class="topbar-tagline">找痛點，拆流程</div>
     <div class="topbar-right">
       <div class="topbar-date" id="topbar-date"></div>
+      <button class="topbar-icon-btn" id="demo-toggle-btn" onclick="toggleDemoMode()" title="切換到示範模式"><i class="ti ti-presentation"></i></button>
       <button class="topbar-icon-btn" onclick="exportExcel()" title="匯出 Excel"><i class="ti ti-table-export"></i></button>
       <button class="topbar-icon-btn" onclick="exportJSON()" title="備份資料"><i class="ti ti-download"></i></button>
       <button class="topbar-icon-btn" onclick="document.getElementById('import-file').click()" title="還原備份"><i class="ti ti-upload"></i></button>
@@ -523,6 +526,7 @@ function doLogin(){
   sessionStorage.setItem('bds_auth','1');
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-main').classList.add('active');
+  updateDemoModeUI();
   showOverview();
 }
 function logout(){
@@ -533,6 +537,1574 @@ function logout(){
   document.getElementById('pwd-input').value='';
   document.getElementById('login-err').textContent='';
 }
+
+// ══════════════════════════════════════
+// 示範模式（投影展示用假資料）
+// ══════════════════════════════════════
+// 沿用 8/19 直播示範時的同一份假資料（18 位虛構客戶，涵蓋六個階段），
+// 只做兩件事：1) 把 logs/PoC/開票日期整批往後平移，讓「今天」對齊實際日期，
+// 不然舊資料裡的日期會全部變成過去式；2) 補上 siOnboard 這個新欄位到幾筆
+// 代表性案子上，讓 SI 端認同 / 終端決策者接觸 的分岔案例都能示範到。
+// 公司/窗口都是虛構名稱，不是真實客戶。
+function seedDemoData(){
+  return [
+  {
+    "id": 1,
+    "name": "Wendy",
+    "title": "業務副總",
+    "contact": "WhatsApp",
+    "company": "泰昌製造",
+    "status": "接觸中",
+    "abc": "A",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "業務副總、泰昌製造",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "內部人力吃緊，想找外部整合方案",
+    "coldValue": "競品比較的優劣勢，提供有限預算做到最好的方案",
+    "coldPlatform": "電話",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 泰昌製造 在近期擴廠，資安需求同步提升，這通常代表內部人力吃緊，想找外部整合方案。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": false,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "3",
+    "cost": "5",
+    "amount": 530000,
+    "q4Screen": [
+      true,
+      false,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 530000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 1,
+        "date": "2026-09-03",
+        "text": "08/16 補送同業案例參考"
+      },
+      {
+        "id": 2,
+        "date": "2026-08-30",
+        "text": "08/12 約好下週三線上會議"
+      },
+      {
+        "id": 3,
+        "date": "2026-08-26",
+        "text": "08/08 客戶提出價格疑慮，已補充比較資料"
+      },
+      {
+        "id": 4,
+        "date": "2026-08-22",
+        "text": "08/04 對方要求延後一週再談"
+      }
+    ],
+    "note": "新創公司，決策速度快",
+    "updatedAt": "2026-09-03"
+  },
+  {
+    "id": 2,
+    "name": "Ivy",
+    "title": "資安主管",
+    "contact": "Line/Email",
+    "company": "恆碩生技",
+    "status": "接觸中",
+    "abc": "B",
+    "diagStuck": [
+      "決策流程拖延"
+    ],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "",
+    "diagState": "卡住",
+    "diagPoC": {},
+    "coldTarget": "資安主管、恆碩生技",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "內部人力吃緊，想找外部整合方案",
+    "coldValue": "第三方稽核報告佐證",
+    "coldPlatform": "Email",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 恆碩生技 在近期擴廠，資安需求同步提升，這通常代表內部人力吃緊，想找外部整合方案。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": false,
+    "pushOpponent": true,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "3",
+    "cost": "4",
+    "amount": 890000,
+    "q4Screen": [
+      false,
+      true,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 890000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 5,
+        "date": "2026-08-22",
+        "text": "08/16 補送同業案例參考"
+      },
+      {
+        "id": 6,
+        "date": "2026-08-18",
+        "text": "08/12 確認決策者是資訊長本人"
+      },
+      {
+        "id": 7,
+        "date": "2026-08-14",
+        "text": "08/08 確認決策者是資訊長本人"
+      },
+      {
+        "id": 8,
+        "date": "2026-08-10",
+        "text": "08/04 窗口請示主管中"
+      }
+    ],
+    "note": "產業龍頭，決策流程較長",
+    "updatedAt": "2026-08-22"
+  },
+  {
+    "id": 3,
+    "name": "Nina",
+    "title": "資訊主任",
+    "contact": "電話",
+    "company": "中冠金融",
+    "status": "接觸中",
+    "abc": "A",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "資訊主任、中冠金融",
+    "coldBiz": "剛完成組織改組，IT 預算重新分配",
+    "coldPain": "competitor 報價比較中，猶豫要不要換",
+    "coldValue": "第三方稽核報告佐證",
+    "coldPlatform": "電話",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 中冠金融 在剛完成組織改組，IT 預算重新分配，這通常代表competitor 報價比較中，猶豫要不要換。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": true,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "4",
+    "cost": "4",
+    "amount": 1340000,
+    "q4Screen": [
+      true,
+      false,
+      false
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1340000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 9,
+        "date": "2026-09-03",
+        "text": "08/16 窗口請示主管中"
+      },
+      {
+        "id": 10,
+        "date": "2026-08-30",
+        "text": "08/12 來電確認需求範圍"
+      },
+      {
+        "id": 11,
+        "date": "2026-08-26",
+        "text": "08/08 對方要求延後一週再談"
+      }
+    ],
+    "note": "產業龍頭，決策流程較長",
+    "updatedAt": "2026-09-03"
+  },
+  {
+    "id": 4,
+    "name": "Tina",
+    "title": "採購經理",
+    "contact": "Line/Email",
+    "company": "和潤金控",
+    "status": "接觸中",
+    "abc": "A",
+    "diagStuck": [],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "採購經理、和潤金控",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "competitor 報價比較中，猶豫要不要換",
+    "coldValue": "第三方稽核報告佐證",
+    "coldPlatform": "Email",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 和潤金控 在近期擴廠，資安需求同步提升，這通常代表competitor 報價比較中，猶豫要不要換。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "3",
+    "cost": "5",
+    "amount": 1070000,
+    "q4Screen": [
+      true,
+      true,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1070000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 12,
+        "date": "2026-09-03",
+        "text": "08/16 客戶提出價格疑慮，已補充比較資料"
+      },
+      {
+        "id": 13,
+        "date": "2026-08-30",
+        "text": "08/12 確認決策者是資訊長本人"
+      },
+      {
+        "id": 14,
+        "date": "2026-08-26",
+        "text": "08/08 寄送初步方案簡報"
+      },
+      {
+        "id": 15,
+        "date": "2026-08-22",
+        "text": "08/04 確認 PoC 環境需求"
+      }
+    ],
+    "note": "曾是舊客戶，關係基礎好",
+    "updatedAt": "2026-09-03"
+  },
+  {
+    "id": 5,
+    "name": "Eric",
+    "title": "總經理特助",
+    "contact": "WhatsApp",
+    "company": "東和物流",
+    "status": "建立信任",
+    "abc": "B",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "「聽起來不錯，但要走簽核流程」",
+    "diagState": "PoC中",
+    "diagPoC": {
+      "startDate": "2026-08-25",
+      "endDate": "2026-09-22",
+      "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
+      "docLink": ""
+    },
+    "coldTarget": "總經理特助、東和物流",
+    "coldBiz": "正在導入新系統，評估供應商中",
+    "coldPain": "既有系統老舊，資安稽核過不了",
+    "coldValue": "同業導入案例，證明投資報酬率",
+    "coldPlatform": "電話",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 東和物流 在正在導入新系統，評估供應商中，這通常代表既有系統老舊，資安稽核過不了。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      false,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": true,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "1",
+    "cost": "2",
+    "amount": 1600000,
+    "q4Screen": [
+      false,
+      false,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1600000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 16,
+        "date": "2026-09-03",
+        "text": "08/16 確認決策者是資訊長本人"
+      },
+      {
+        "id": 17,
+        "date": "2026-08-30",
+        "text": "08/12 來電確認需求範圍"
+      },
+      {
+        "id": 18,
+        "date": "2026-08-26",
+        "text": "08/08 確認 PoC 環境需求"
+      }
+    ],
+    "note": "曾是舊客戶，關係基礎好",
+    "updatedAt": "2026-09-03"
+  },
+  {
+    "id": 6,
+    "name": "Marcus",
+    "title": "資訊主任",
+    "contact": "Line/Email",
+    "company": "弘毅顧問",
+    "status": "建立信任",
+    "abc": "A",
+    "diagStuck": [
+      "陌開沒回應",
+      "沒接觸到決策者"
+    ],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "「這個我要跟主管報告一下」",
+    "diagState": "卡住",
+    "diagPoC": {},
+    "coldTarget": "資訊主任、弘毅顧問",
+    "coldBiz": "正在導入新系統，評估供應商中",
+    "coldPain": "既有系統老舊，資安稽核過不了",
+    "coldValue": "同業導入案例，證明投資報酬率",
+    "coldPlatform": "Email",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 弘毅顧問 在正在導入新系統，評估供應商中，這通常代表既有系統老舊，資安稽核過不了。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "5",
+    "cost": "5",
+    "amount": 910000,
+    "q4Screen": [
+      true,
+      true,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 910000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 19,
+        "date": "2026-09-03",
+        "text": "08/16 來電確認需求範圍"
+      },
+      {
+        "id": 20,
+        "date": "2026-08-30",
+        "text": "08/12 來電確認需求範圍"
+      },
+      {
+        "id": 21,
+        "date": "2026-08-26",
+        "text": "08/08 約好下週三線上會議"
+      },
+      {
+        "id": 22,
+        "date": "2026-08-22",
+        "text": "08/04 來電確認需求範圍"
+      }
+    ],
+    "note": "產業龍頭，決策流程較長",
+    "updatedAt": "2026-09-03"
+  },
+  {
+    "id": 7,
+    "name": "Alice",
+    "title": "營運經理",
+    "contact": "Line/Email",
+    "company": "宏遠半導體",
+    "status": "建立信任",
+    "abc": "A",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "「聽起來不錯，但要走簽核流程」",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "營運經理、宏遠半導體",
+    "coldBiz": "正在導入新系統，評估供應商中",
+    "coldPain": "總部要求年底前完成合規",
+    "coldValue": "競品比較的優劣勢，提供有限預算做到最好的方案",
+    "coldPlatform": "Email",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 宏遠半導體 在正在導入新系統，評估供應商中，這通常代表總部要求年底前完成合規。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": true,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "5",
+    "cost": "2",
+    "amount": 1150000,
+    "q4Screen": [
+      true,
+      true,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1150000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 23,
+        "date": "2026-09-03",
+        "text": "08/16 窗口請示主管中"
+      },
+      {
+        "id": 24,
+        "date": "2026-08-30",
+        "text": "08/12 來電確認需求範圍"
+      }
+    ],
+    "note": "產業龍頭，決策流程較長",
+    "updatedAt": "2026-09-03"
+  },
+  {
+    "id": 8,
+    "name": "Eric",
+    "title": "營運經理",
+    "contact": "WhatsApp",
+    "company": "奕陞工業",
+    "status": "建立信任",
+    "abc": "B",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "「這個我要跟主管報告一下」",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "營運經理、奕陞工業",
+    "coldBiz": "剛完成組織改組，IT 預算重新分配",
+    "coldPain": "competitor 報價比較中，猶豫要不要換",
+    "coldValue": "同業導入案例，證明投資報酬率",
+    "coldPlatform": "LinkedIn 私訊",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 奕陞工業 在剛完成組織改組，IT 預算重新分配，這通常代表competitor 報價比較中，猶豫要不要換。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": false,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "4",
+    "cost": "2",
+    "amount": 1000000,
+    "q4Screen": [
+      false,
+      true,
+      false
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1000000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 25,
+        "date": "2026-09-03",
+        "text": "08/16 補送同業案例參考"
+      },
+      {
+        "id": 26,
+        "date": "2026-08-30",
+        "text": "08/12 確認 PoC 環境需求"
+      }
+    ],
+    "note": "產業龍頭，決策流程較長",
+    "updatedAt": "2026-09-03"
+  },
+  {
+    "id": 9,
+    "name": "Alice",
+    "title": "數位長",
+    "contact": "電話",
+    "company": "聯達醫療",
+    "status": "推進中",
+    "abc": "B",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "「我們正在比較三家」",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "數位長、聯達醫療",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "competitor 報價比較中，猶豫要不要換",
+    "coldValue": "客製化的分階段導入計畫",
+    "coldPlatform": "Email",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 聯達醫療 在近期擴廠，資安需求同步提升，這通常代表competitor 報價比較中，猶豫要不要換。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": false,
+    "pushOpponent": true,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "3",
+    "cost": "5",
+    "amount": 1290000,
+    "q4Screen": [
+      true,
+      false,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1290000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 27,
+        "date": "2026-09-03",
+        "text": "08/16 確認 PoC 環境需求"
+      }
+    ],
+    "note": "曾是舊客戶，關係基礎好",
+    "updatedAt": "2026-09-03",
+    "siOnboard": true,
+    "nextMeeting": {
+      "at": "2026-09-05T14:00",
+      "note": "季度回顧會議，確認導入時程"
+    }
+  },
+  {
+    "id": 10,
+    "name": "Marcus",
+    "title": "數位長",
+    "contact": "電話",
+    "company": "安揚生技",
+    "status": "推進中",
+    "abc": "C",
+    "diagStuck": [],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "「這個我要跟主管報告一下」",
+    "diagState": "PoC中",
+    "diagPoC": {
+      "startDate": "2026-08-25",
+      "endDate": "2026-09-22",
+      "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
+      "docLink": ""
+    },
+    "coldTarget": "數位長、安揚生技",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "年度預算尚未使用，正在補足系統安全",
+    "coldValue": "客製化的分階段導入計畫",
+    "coldPlatform": "LinkedIn 私訊",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 安揚生技 在近期擴廠，資安需求同步提升，這通常代表年度預算尚未使用，正在補足系統安全。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "4",
+    "cost": "5",
+    "amount": 1490000,
+    "q4Screen": [
+      false,
+      true,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1490000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 28,
+        "date": "2026-09-03",
+        "text": "08/16 來電確認需求範圍"
+      },
+      {
+        "id": 29,
+        "date": "2026-08-30",
+        "text": "08/12 寄送初步方案簡報"
+      }
+    ],
+    "note": "曾是舊客戶，關係基礎好",
+    "updatedAt": "2026-09-03",
+    "siOnboard": true
+  },
+  {
+    "id": 11,
+    "name": "Ben",
+    "title": "業務副總",
+    "contact": "Line",
+    "company": "鑫磊科技",
+    "status": "推進中",
+    "abc": "A",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "「這個我要跟主管報告一下」",
+    "diagState": "PoC中",
+    "diagPoC": {
+      "startDate": "2026-08-25",
+      "endDate": "2026-09-05",
+      "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
+      "docLink": ""
+    },
+    "coldTarget": "業務副總、鑫磊科技",
+    "coldBiz": "剛完成組織改組，IT 預算重新分配",
+    "coldPain": "既有系統老舊，資安稽核過不了",
+    "coldValue": "第三方稽核報告佐證",
+    "coldPlatform": "Email",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 鑫磊科技 在剛完成組織改組，IT 預算重新分配，這通常代表既有系統老舊，資安稽核過不了。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": false,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "5",
+    "cost": "5",
+    "amount": 1770000,
+    "q4Screen": [
+      true,
+      true,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1770000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 30,
+        "date": "2026-09-03",
+        "text": "08/16 確認決策者是資訊長本人"
+      }
+    ],
+    "note": "透過展會認識，尚在培養信任",
+    "updatedAt": "2026-09-03",
+    "siOnboard": true
+  },
+  {
+    "id": 12,
+    "name": "Jason",
+    "title": "業務副總",
+    "contact": "WhatsApp",
+    "company": "鴻威電子",
+    "status": "推進中",
+    "abc": "A",
+    "diagStuck": [],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "「預算明年才會下來」",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "業務副總、鴻威電子",
+    "coldBiz": "剛完成組織改組，IT 預算重新分配",
+    "coldPain": "既有系統老舊，資安稽核過不了",
+    "coldValue": "客製化的分階段導入計畫",
+    "coldPlatform": "LinkedIn 私訊",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 鴻威電子 在剛完成組織改組，IT 預算重新分配，這通常代表既有系統老舊，資安稽核過不了。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      false,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "1",
+    "cost": "5",
+    "amount": 1280000,
+    "q4Screen": [
+      true,
+      false,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1280000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 31,
+        "date": "2026-09-03",
+        "text": "08/16 寄送初步方案簡報"
+      },
+      {
+        "id": 32,
+        "date": "2026-08-30",
+        "text": "08/12 補送同業案例參考"
+      },
+      {
+        "id": 33,
+        "date": "2026-08-26",
+        "text": "08/08 補送同業案例參考"
+      }
+    ],
+    "note": "曾是舊客戶，關係基礎好",
+    "updatedAt": "2026-09-03",
+    "siOnboard": false
+  },
+  {
+    "id": 13,
+    "name": "Tina",
+    "title": "營運經理",
+    "contact": "WhatsApp",
+    "company": "昱盛精密",
+    "status": "成交談判",
+    "abc": "C",
+    "diagStuck": [
+      "競品介入"
+    ],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "「聽起來不錯，但要走簽核流程」",
+    "diagState": "卡住",
+    "diagPoC": {},
+    "coldTarget": "營運經理、昱盛精密",
+    "coldBiz": "正在導入新系統，評估供應商中",
+    "coldPain": "總部要求年底前完成合規",
+    "coldValue": "同業導入案例，證明投資報酬率",
+    "coldPlatform": "LinkedIn 私訊",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 昱盛精密 在正在導入新系統，評估供應商中，這通常代表總部要求年底前完成合規。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      false,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": true,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "4",
+    "cost": "5",
+    "amount": 450000,
+    "q4Screen": [
+      false,
+      false,
+      false
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 450000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 34,
+        "date": "2026-09-03",
+        "text": "08/16 窗口請示主管中"
+      },
+      {
+        "id": 35,
+        "date": "2026-08-30",
+        "text": "08/12 補送同業案例參考"
+      },
+      {
+        "id": 36,
+        "date": "2026-08-26",
+        "text": "08/08 來電確認需求範圍"
+      },
+      {
+        "id": 37,
+        "date": "2026-08-22",
+        "text": "08/04 來電確認需求範圍"
+      }
+    ],
+    "note": "透過展會認識，尚在培養信任",
+    "updatedAt": "2026-09-03",
+    "quote": {
+      "date": "2026-08-22",
+      "amount": 450000,
+      "link": ""
+    }
+  },
+  {
+    "id": 14,
+    "name": "Ray",
+    "title": "資訊主任",
+    "contact": "電話",
+    "company": "匯智雲端",
+    "status": "成交談判",
+    "abc": "C",
+    "diagStuck": [],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "「我們正在比較三家」",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "資訊主任、匯智雲端",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "年度預算尚未使用，正在補足系統安全",
+    "coldValue": "第三方稽核報告佐證",
+    "coldPlatform": "電話",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 匯智雲端 在近期擴廠，資安需求同步提升，這通常代表年度預算尚未使用，正在補足系統安全。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      false,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "3",
+    "cost": "3",
+    "amount": 1370000,
+    "q4Screen": [
+      true,
+      false,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1370000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 38,
+        "date": "2026-09-03",
+        "text": "08/16 窗口請示主管中"
+      },
+      {
+        "id": 39,
+        "date": "2026-08-30",
+        "text": "08/12 確認 PoC 環境需求"
+      },
+      {
+        "id": 40,
+        "date": "2026-08-26",
+        "text": "08/08 確認 PoC 環境需求"
+      },
+      {
+        "id": 41,
+        "date": "2026-08-22",
+        "text": "08/04 寄送初步方案簡報"
+      }
+    ],
+    "note": "新創公司，決策速度快",
+    "updatedAt": "2026-09-03",
+    "siOnboard": false,
+    "quote": {
+      "date": "2026-08-22",
+      "amount": 1370000,
+      "link": ""
+    }
+  },
+  {
+    "id": 15,
+    "name": "Ben",
+    "title": "資安主管",
+    "contact": "Email",
+    "company": "晶采科技",
+    "status": "成交談判",
+    "abc": "A",
+    "diagStuck": [],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "「這個我要跟主管報告一下」",
+    "diagState": "PoC中",
+    "diagPoC": {
+      "startDate": "2026-08-25",
+      "endDate": "2026-09-22",
+      "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
+      "docLink": ""
+    },
+    "coldTarget": "資安主管、晶采科技",
+    "coldBiz": "剛完成組織改組，IT 預算重新分配",
+    "coldPain": "總部要求年底前完成合規",
+    "coldValue": "同業導入案例，證明投資報酬率",
+    "coldPlatform": "電話",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 晶采科技 在剛完成組織改組，IT 預算重新分配，這通常代表總部要求年底前完成合規。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "2",
+    "cost": "3",
+    "amount": 1590000,
+    "q4Screen": [
+      false,
+      false,
+      true
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 1590000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 42,
+        "date": "2026-09-03",
+        "text": "08/16 補送同業案例參考"
+      },
+      {
+        "id": 43,
+        "date": "2026-08-30",
+        "text": "08/12 窗口請示主管中"
+      }
+    ],
+    "note": "新創公司，決策速度快",
+    "updatedAt": "2026-09-03",
+    "quote": {
+      "date": "2026-08-30",
+      "amount": 1590000,
+      "link": ""
+    }
+  },
+  {
+    "id": 16,
+    "name": "Kevin",
+    "title": "數位長",
+    "contact": "電話",
+    "company": "景旺光電",
+    "status": "已簽約",
+    "abc": "B",
+    "diagStuck": [],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "「聽起來不錯，但要走簽核流程」",
+    "diagState": "PoC中",
+    "diagPoC": {
+      "startDate": "2026-08-25",
+      "endDate": "2026-09-22",
+      "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
+      "docLink": ""
+    },
+    "coldTarget": "數位長、景旺光電",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "內部人力吃緊，想找外部整合方案",
+    "coldValue": "競品比較的優劣勢，提供有限預算做到最好的方案",
+    "coldPlatform": "Email",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 景旺光電 在近期擴廠，資安需求同步提升，這通常代表內部人力吃緊，想找外部整合方案。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "1",
+    "cost": "4",
+    "amount": 490000,
+    "q4Screen": [
+      true,
+      false,
+      false
+    ],
+    "invoice": {
+      "mode": "60% 頭款 & 40% 尾款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": true,
+          "collected": true,
+          "amount": 294000,
+          "incomeDate": "2026-08-15"
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 196000,
+          "incomeDate": "2026-09-14"
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 44,
+        "date": "2026-09-03",
+        "text": "08/16 對方要求延後一週再談"
+      }
+    ],
+    "note": "產業龍頭，決策流程較長",
+    "updatedAt": "2026-09-03",
+    "signedDate": "2026-08-15",
+    "quote": {
+      "date": "2026-09-03",
+      "amount": 490000,
+      "link": ""
+    }
+  },
+  {
+    "id": 17,
+    "name": "Leo",
+    "title": "資安主管",
+    "contact": "Email",
+    "company": "佳鼎製藥",
+    "status": "已簽約",
+    "abc": "B",
+    "diagStuck": [],
+    "diagDM": true,
+    "diagOver2W": false,
+    "diagQuote": "「這個我要跟主管報告一下」",
+    "diagState": "推進中",
+    "diagPoC": {},
+    "coldTarget": "資安主管、佳鼎製藥",
+    "coldBiz": "正在導入新系統，評估供應商中",
+    "coldPain": "內部人力吃緊，想找外部整合方案",
+    "coldValue": "客製化的分階段導入計畫",
+    "coldPlatform": "LinkedIn 私訊",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 佳鼎製藥 在正在導入新系統，評估供應商中，這通常代表內部人力吃緊，想找外部整合方案。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      false,
+      true
+    ],
+    "pushDM": true,
+    "pushPressure": false,
+    "pushOpponent": false,
+    "pushPlan": {
+      "day1": "重新聯繫，確認近期優先順序",
+      "day3to5": "確認使用環境跟部署人數",
+      "day7": "確認上線時間與介接可行性",
+      "day10to14": "kick-off meeting"
+    },
+    "prob": "4",
+    "cost": "2",
+    "amount": 1340000,
+    "q4Screen": [
+      true,
+      false,
+      false
+    ],
+    "invoice": {
+      "mode": "60% 頭款 & 40% 尾款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": true,
+          "collected": true,
+          "amount": 804000,
+          "incomeDate": "2026-08-15"
+        },
+        {
+          "label": "尾款",
+          "invoiced": true,
+          "collected": false,
+          "amount": 536000,
+          "incomeDate": "2026-09-14"
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 45,
+        "date": "2026-09-03",
+        "text": "08/16 寄送初步方案簡報"
+      },
+      {
+        "id": 46,
+        "date": "2026-08-30",
+        "text": "08/12 補送同業案例參考"
+      },
+      {
+        "id": 47,
+        "date": "2026-08-26",
+        "text": "08/08 對方要求延後一週再談"
+      },
+      {
+        "id": 48,
+        "date": "2026-08-22",
+        "text": "08/04 寄送初步方案簡報"
+      }
+    ],
+    "note": "曾是舊客戶，關係基礎好",
+    "updatedAt": "2026-09-03",
+    "signedDate": "2026-08-15",
+    "quote": {
+      "date": "2026-08-22",
+      "amount": 1340000,
+      "link": ""
+    }
+  },
+  {
+    "id": 18,
+    "name": "Sherry",
+    "title": "營運經理",
+    "contact": "Email",
+    "company": "翔宇資訊",
+    "status": "暫緩跟進",
+    "abc": "A",
+    "diagStuck": [
+      "沒有確認「下一步」"
+    ],
+    "diagDM": false,
+    "diagOver2W": false,
+    "diagQuote": "「我們正在比較三家」",
+    "diagState": "卡住",
+    "diagPoC": {},
+    "coldTarget": "營運經理、翔宇資訊",
+    "coldBiz": "近期擴廠，資安需求同步提升",
+    "coldPain": "年度預算尚未使用，正在補足系統安全",
+    "coldValue": "競品比較的優劣勢，提供有限預算做到最好的方案",
+    "coldPlatform": "LinkedIn 私訊",
+    "coldS1": "我是 Roy，專注協助企業解決資安通路整合的問題。",
+    "coldS2": "最近注意到 翔宇資訊 在近期擴廠，資安需求同步提升，這通常代表年度預算尚未使用，正在補足系統安全。",
+    "coldS3": "我們最近幫類似規模的公司做的就是縮短導入時程 30%。想用 10 分鐘跟你驗證一下。",
+    "coldWIIFT": [
+      true,
+      true,
+      true
+    ],
+    "pushDM": false,
+    "pushPressure": null,
+    "pushOpponent": null,
+    "pushPlan": {},
+    "prob": "3",
+    "cost": "1",
+    "amount": 730000,
+    "q4Screen": [
+      true,
+      false,
+      false
+    ],
+    "invoice": {
+      "mode": "結案後付款",
+      "customMode": "",
+      "payments": [
+        {
+          "label": "頭款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 730000,
+          "incomeDate": ""
+        },
+        {
+          "label": "尾款",
+          "invoiced": false,
+          "collected": false,
+          "amount": 0,
+          "incomeDate": ""
+        }
+      ]
+    },
+    "logs": [
+      {
+        "id": 49,
+        "date": "2026-09-03",
+        "text": "08/16 寄送初步方案簡報"
+      }
+    ],
+    "note": "曾是舊客戶，關係基礎好",
+    "updatedAt": "2026-09-03"
+  }
+];
+}
+function seedDemoGoals(){
+  const y = new Date().getFullYear();
+  const q = Math.floor(new Date().getMonth()/3)+1;
+  return { annual:{[String(y)]:12000000}, quarterly:{[`${y}-Q${q}`]:3000000} };
+}
+function toggleDemoMode(){
+  if(!demoMode){
+    if(!confirm('切換到示範模式：畫面會換成假資料，適合投影展示。你的真實客戶資料不會受影響，之後可以隨時切回來。要切換嗎？')) return;
+  } else {
+    if(!confirm('切回真實模式：畫面會換回你自己的客戶資料。要切換嗎？')) return;
+  }
+  demoMode = !demoMode;
+  localStorage.setItem('bds_mode', demoMode ? 'demo' : 'real');
+  customers = JSON.parse(localStorage.getItem(customersKey())||'[]');
+  if(demoMode && customers.length===0){
+    customers = seedDemoData();
+    save();
+  }
+  nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
+  goals = JSON.parse(localStorage.getItem(goalsKey())||'{}');
+  if(demoMode && !goals.annual && !goals.quarterly){
+    goals = seedDemoGoals();
+    saveGoals();
+  }
+  currentCustomerId = null;
+  goalsEditMode = false;
+  updateDemoModeUI();
+  showOverview();
+  showToast(demoMode ? '✓ 已切換到示範模式（假資料）' : '✓ 已切回真實模式');
+}
+function updateDemoModeUI(){
+  const badge = document.getElementById('mode-badge');
+  const btn = document.getElementById('demo-toggle-btn');
+  const body = document.body;
+  if(badge) badge.textContent = demoMode ? '示範模式' : '個人版';
+  if(btn) btn.title = demoMode ? '切回真實資料' : '切換到示範模式';
+  if(body) body.classList.toggle('demo-active', demoMode);
+}
 if(sessionStorage.getItem('bds_auth')==='1'){
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-main').classList.add('active');
@@ -541,16 +2113,22 @@ if(sessionStorage.getItem('bds_auth')==='1'){
 // ══════════════════════════════════════
 // 資料
 // ══════════════════════════════════════
-let customers = JSON.parse(localStorage.getItem('bds_v1')||'[]');
+// 示範模式：投影展示用假資料跟 Roy 自己的真實客戶資料分開存放，
+// 用不同的 localStorage key，切換時互不污染，避免展示時誤改到真實資料
+let demoMode = localStorage.getItem('bds_mode') === 'demo';
+function customersKey(){ return demoMode ? 'bds_demo_v1' : 'bds_v1'; }
+function goalsKey(){ return demoMode ? 'bds_demo_goals' : 'bds_goals'; }
+
+let customers = JSON.parse(localStorage.getItem(customersKey())||'[]');
 let nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
 let nextLogId = 2000;
 let currentCustomerId = null;
-let goals = JSON.parse(localStorage.getItem('bds_goals')||'{}');
+let goals = JSON.parse(localStorage.getItem(goalsKey())||'{}');
 let goalsEditMode = false;
 
 function getYearKey(d){ return String(new Date(d).getFullYear()); }
 function getQuarterKey(d){ const dt=new Date(d); const q=Math.floor(dt.getMonth()/3)+1; return `${dt.getFullYear()}-Q${q}`; }
-function saveGoals(){ localStorage.setItem('bds_goals', JSON.stringify(goals)); }
+function saveGoals(){ localStorage.setItem(goalsKey(), JSON.stringify(goals)); }
 function computeAchieved(){
   const curYear = getYearKey(TODAY), curQKey = getQuarterKey(TODAY);
   let yearAmt=0, qAmt=0;
@@ -751,7 +2329,7 @@ function toggleSidebarGroup(status){
 let activeFilters = new Set();
 let editingId = null;
 
-function save(){ localStorage.setItem('bds_v1',JSON.stringify(customers)); }
+function save(){ localStorage.setItem(customersKey(),JSON.stringify(customers)); }
 function getC(id){ return customers.find(c=>c.id===id); }
 
 function defaultInvoice(){ return {mode:'',customMode:'',payments:[{label:'頭款',invoiced:false,collected:false,amount:'',incomeDate:''},{label:'尾款',invoiced:false,collected:false,amount:'',incomeDate:''}]}; }
@@ -1703,7 +3281,7 @@ function importJSON(e){
 }
 
 // 初始化
-if(sessionStorage.getItem('bds_auth')==='1') showOverview();
+if(sessionStorage.getItem('bds_auth')==='1'){ updateDemoModeUI(); showOverview(); }
 </script>
 </body>
 </html>
