@@ -596,15 +596,20 @@ function computeTodayReminders(){
   const needQuote = customers.filter(c=>{
     return STAGE_FLOW.indexOf(c.status) >= STAGE_FLOW.indexOf('推進中') && !(c.quote && c.quote.date);
   });
+  const needSI = customers.filter(c=>{
+    return c.siOnboard===false && ['推進中','成交談判'].includes(c.status);
+  });
   const needDM = customers.filter(c=>{
-    return c.diagDM===false && ['推進中','成交談判'].includes(c.status);
+    // SI 端沒認同的案子已經被上面的 needSI 抓走，這裡只抓「SI 認同、但終端還沒接觸到」的案子，
+    // 避免同一個案子在兩組提醒裡重複出現，也讓兩種卡點看起來互斥、對策更清楚
+    return c.siOnboard!==false && c.diagDM===false && ['推進中','成交談判'].includes(c.status);
   });
   const meetingSoon = customers.filter(c=>{
     if(!c.nextMeeting || !c.nextMeeting.at) return false;
     const diffDays = Math.ceil((new Date(c.nextMeeting.at) - new Date()) / 86400000);
     return diffDays <= 3 && diffDays >= 0;
   }).sort((a,b)=> new Date(a.nextMeeting.at) - new Date(b.nextMeeting.at));
-  return { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon };
+  return { needFollow, needCold, pocDue, needInvoice, needQuote, needSI, needDM, meetingSoon };
 }
 
 const needsMeetingNote = c => ['推進中','成交談判','已簽約'].includes(c.status) && !(c.nextMeeting && c.nextMeeting.at);
@@ -658,7 +663,7 @@ function invoicePill(c){
 }
 
 function todayReminderHTML(){
-  const { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon } = computeTodayReminders();
+  const { needFollow, needCold, pocDue, needInvoice, needQuote, needSI, needDM, meetingSoon } = computeTodayReminders();
   const groups = [
     { icon:'🔴', label:'需要跟進', hint:'超過 7 天沒追蹤', items:needFollow, render:followPill },
     { icon:'🗓️', label:'會議提醒', hint:'即將到來的會面（3 天內）', items:meetingSoon, render:meetingPill },
@@ -666,7 +671,8 @@ function todayReminderHTML(){
     { icon:'🎯', label:'PoC 快到期', hint:'預計結束日在 3 天內或已過期', items:pocDue, render:reminderPill },
     { icon:'🔵', label:'待報價', hint:'案子已進推進中以後，但還沒報價', items:needQuote, render:quotePill },
     { icon:'💰', label:'待開票', hint:'案子已簽約，發票還沒開', items:needInvoice, render:invoicePill },
-    { icon:'👤', label:'決策者未接觸', hint:'案子還在推進，但還沒接觸到決策者', items:needDM, render:reminderPill },
+    { icon:'🤝', label:'SI未認同', hint:'案子還在推進，但 SI 端還沒認同要推', items:needSI, render:reminderPill },
+    { icon:'👤', label:'終端決策者未接觸', hint:'SI 認同要推，但還沒接觸到終端決策者', items:needDM, render:reminderPill },
   ].filter(g => g.items.length>0);
 
   if(groups.length===0){
@@ -757,6 +763,7 @@ function getRecommendation(c){
   const stage = c.status;
   const stuck = (c.diagStuck||[]);
   const dmOk = c.diagDM;
+  const siOk = c.siOnboard;
   const over2w = c.diagOver2W;
   const q = calcQ(c.prob,c.cost);
 
@@ -769,7 +776,8 @@ function getRecommendation(c){
     return { text:'繼續建立信任。每次互動要有「小收穫」——一個確認、一個問題的解答、一個共識。', tab:'日誌', action:'記錄今天互動' };
   }
   if(stage==='推進中'){
-    if(!dmOk) return { text:'⚠ 還沒接觸到決策者。現在最重要的事不是繼續推，是找到真正能拍板的人。', tab:'推進', action:'設計推進計畫' };
+    if(siOk!==true) return { text: siOk===false ? '⚠ SI 端還沒認同要推這案子。現在最重要的事不是繼續推終端，是先搞清楚 SI 業務/主管猶豫的原因，給他們推的理由。' : '先確認 SI 端的態度：SI 業務/主管認不認同要推這個案子？這是往下推進前最優先要確認的事。', tab:'推進', action:'設計推進計畫' };
+    if(!dmOk) return { text:'⚠ SI 認同要推，但還沒接觸到終端決策者。現在最重要的事是請 SI 協助引薦，或爭取聯合拜訪的機會。', tab:'推進', action:'設計推進計畫' };
     if(over2w) return { text:'卡超過 2 週了。用工具表 C 的三個問題（決策者 / 決策壓力 / 內部反對者）重新診斷，然後設計接下來 2 週的推進節奏。', tab:'推進', action:'重新設計推進計畫' };
     return { text:'案子在推進中，維持節奏。記得每次互動結束都要確認「下一步是什麼、誰負責、什麼時間」。', tab:'推進', action:'查看推進計畫' };
   }
@@ -786,18 +794,25 @@ function getRecommendation(c){
   return { text:'繼續加油！記得每次互動後更新日誌，讓系統幫你追蹤節奏。', tab:'日誌', action:'記錄互動' };
 }
 
-// ── 推進計畫建議（依三個關鍵問題的答案，給 junior BD 預設行動方向；仍可自行編輯覆蓋）──
-// 判斷優先順序：決策者未接觸 > 有內部反對者 > 無決策壓力 > 一路順
-// 三題都要有明確答案才給對應建議組，避免只填一半就提早誤判
+// ── 推進計畫建議（依四個關鍵問題的答案，給 junior BD 預設行動方向；仍可自行編輯覆蓋）──
+// 判斷優先順序：SI未認同 > 終端決策者未接觸 > 有內部反對者 > 無決策壓力 > 一路順
+// Roy 的交易鏈是「Roy→SI→終端」，SI 不認同跟終端打不進去是完全不同的卡點，
+// 所以 SI 這題放在最前面，答案分岔後才問終端決策者
+// 四題都要有明確答案才給對應建議組，避免只填一半就提早誤判
 function pushPlanSuggest(c){
-  const dm = c.pushDM, pr = c.pushPressure, op = c.pushOpponent;
+  const si = c.siOnboard, dm = c.pushDM, pr = c.pushPressure, op = c.pushOpponent;
   const answered = v => v===true || v===false;
 
+  if(!answered(si)) return null;
+  if(si===false){
+    return ['先確認 SI 業務/主管猶豫的原因：是不懂產品、覺得不好賣，還是跟終端關係不夠深','提供 SI 具體的成交誘因（案例、佣金、售後支援），降低他們推的門檻','安排你直接跟 SI 業務主管對談一次，釐清這案子對 SI 的價值','若 SI 持續不推，考慮找其他 SI 通路，或重新評估這個案子的優先度'];
+  }
+  // si === true，SI 端認同，接下來看終端決策者
   if(!answered(dm)) return null;
   if(dm===false){
-    return ['透過現有窗口，直接問「這件事最後是誰拍板？」','嘗試約到決策者，用「10 分鐘簡短交流」降低門檻','若還沒約到，請窗口先把資料轉給決策者，附上具體效益','重新評估：決策者仍接觸不到就考慮降頻'];
+    return ['請 SI 引薦，或爭取一次聯合拜訪的機會，直接問「這件事最後是誰拍板？」','嘗試約到終端決策者，用「10 分鐘簡短交流」降低門檻','若還沒約到，請 SI 窗口先把資料轉給決策者，附上具體效益','重新評估：終端決策者仍接觸不到就考慮降頻'];
   }
-  // dm === true，決策者已接觸，接下來看反對者
+  // dm === true，終端決策者已接觸，接下來看反對者
   if(!answered(op)) return null;
   if(op===true){
     return ['約窗口聊，了解反對者在意什麼，協助準備資訊幫忙說服內部','根據反對者的疑慮準備對應資料（成本、風險、比較）','主動詢問內部討論進度，適時補充案例或佐證','若反對意見仍未化解，評估要不要直接跟反對者對話'];
@@ -971,7 +986,9 @@ function stageBarHTML(c){
 
 // ── 左側摘要卡 ──
 // 欄位判斷依據（不是照搬 HubSpot 預設欄位，是照 Roy 自己的 SI 賦能診斷框架選的）：
-// 1. 決策者已接觸：診斷框架裡最優先要確認的事，一般 CRM 不會有這格
+// 1. SI是否認同 / 終端決策者已接觸：Roy 的交易鏈是「Roy→SI→終端」，案子卡住時
+//    可能是「SI 不想推」或「SI 有推但打不進終端決策者」，兩個是完全不同的對策，
+//    所以拆成兩個獨立欄位追蹤，而不是混在同一格「決策者已接觸」裡
 // 2. 客戶分類 A/B/C、象限判斷：工作坊教材裡的優先度框架，決定該不該花時間
 // 3. 上次追蹤天數：跟進節奏是否斷掉的警示
 // 4. 快速記錄：日誌是最高頻的操作，直接放在摘要卡，不用切到日誌分頁才能記
@@ -982,7 +999,8 @@ function summaryCardHTML(c){
   const od = isOverdue(c);
   return `
   <div class="summary-sec-title">關鍵狀態</div>
-  <div class="summary-row"><span class="summary-label">決策者已接觸</span><span class="summary-val" style="color:${c.diagDM===true?'var(--green)':c.diagDM===false?'var(--red)':'var(--text3)'}">${c.diagDM===true?'是':c.diagDM===false?'否':'未確認'}</span></div>
+  <div class="summary-row"><span class="summary-label">SI是否認同</span><span class="summary-val" style="color:${c.siOnboard===true?'var(--green)':c.siOnboard===false?'var(--red)':'var(--text3)'}">${c.siOnboard===true?'是':c.siOnboard===false?'否':'未確認'}</span></div>
+  <div class="summary-row"><span class="summary-label">終端決策者已接觸</span><span class="summary-val" style="color:${c.diagDM===true?'var(--green)':c.diagDM===false?'var(--red)':'var(--text3)'}">${c.diagDM===true?'是':c.diagDM===false?'否':'未確認'}</span></div>
   <div class="summary-row"><span class="summary-label" title="A＝有需求+有預算+有時間表｜B＝有需求但預算或時程不確定｜C＝需求薄弱、多次接觸沒進展" style="cursor:help;border-bottom:1px dotted var(--text3);">客戶分類 <i class="ti ti-info-circle" style="font-size:11px;"></i></span><span class="summary-val">${c.abc?`${c.abc} 類`:'未分類'}</span></div>
   <div class="summary-row"><span class="summary-label">象限判斷</span><span class="summary-val" style="font-size:12px;${q?'cursor:help;border-bottom:1px dotted var(--text3);':''}" ${q?`title="${Q_DESC_FULL[q]}"`:''}>${q?`${q}｜${Q_DESC[q]||''}`:'未評分'}</span></div>
   <div class="summary-row"><span class="summary-label">上次追蹤</span><span class="summary-val" style="${od?'color:var(--red)':''}">${last?`${daysSince(last)} 天前`:'尚未追蹤'}</span></div>
@@ -1137,7 +1155,14 @@ function diagHTML(c, rec){
     <div class="sec-title">其他診斷資訊</div>
     <div class="field-group">
       <div class="field-row">
-        <span class="field-label">決策者已接觸</span>
+        <span class="field-label">SI是否認同要推這案子</span>
+        <div style="display:flex;gap:8px;align-items:center;padding:8px 14px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="si-${c.id}" value="1" ${c.siOnboard===true?'checked':''} onchange="setField(${c.id},'siOnboard',true)"> 是</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="si-${c.id}" value="0" ${c.siOnboard===false?'checked':''} onchange="setField(${c.id},'siOnboard',false)"> 否</label>
+        </div>
+      </div>
+      <div class="field-row">
+        <span class="field-label">終端決策者已接觸</span>
         <div style="display:flex;gap:8px;align-items:center;padding:8px 14px;">
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="dm-${c.id}" value="1" ${c.diagDM?'checked':''} onchange="setField(${c.id},'diagDM',true)"> 是</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="dm-${c.id}" value="0" ${c.diagDM===false?'checked':''} onchange="setField(${c.id},'diagDM',false)"> 否</label>
@@ -1253,10 +1278,17 @@ function pushHTML(c){
   </div>
 
   <div class="sec">
-    <div class="sec-title">三個關鍵推進問題</div>
+    <div class="sec-title">四個關鍵推進問題</div>
     <div class="field-group">
       <div class="field-row">
-        <span class="field-label">決策者接觸到了嗎？</span>
+        <span class="field-label">SI是否認同要推這案子？</span>
+        <div style="display:flex;gap:8px;align-items:center;padding:8px 14px;">
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="psi-${c.id}" value="1" ${c.siOnboard===true?'checked':''} onchange="setField(${c.id},'siOnboard',true)"> 是</label>
+          <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="psi-${c.id}" value="0" ${c.siOnboard===false?'checked':''} onchange="setField(${c.id},'siOnboard',false)"> 否</label>
+        </div>
+      </div>
+      <div class="field-row">
+        <span class="field-label">終端決策者接觸到了嗎？</span>
         <div style="display:flex;gap:8px;align-items:center;padding:8px 14px;">
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="pdm-${c.id}" value="1" ${c.pushDM===true?'checked':''} onchange="setField(${c.id},'pushDM',true)"> 是</label>
           <label style="display:flex;align-items:center;gap:5px;font-size:13px;cursor:pointer;"><input type="radio" name="pdm-${c.id}" value="0" ${c.pushDM===false?'checked':''} onchange="setField(${c.id},'pushDM',false)"> 否</label>
@@ -1416,7 +1448,7 @@ function setField(id, field, val){
   c[field] = val;
   c.updatedAt = TODAY;
   save();
-  if(field==='status' || field==='diagDM' || field==='diagOver2W' || field==='pushDM' || field==='pushPressure' || field==='pushOpponent' || field==='diagState'){
+  if(field==='status' || field==='diagDM' || field==='diagOver2W' || field==='siOnboard' || field==='pushDM' || field==='pushPressure' || field==='pushOpponent' || field==='diagState'){
     renderCustomer(id, currentActiveTab||'diag');
   }
 }
