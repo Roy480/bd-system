@@ -2758,8 +2758,8 @@ function renderCustomer(id, activeTab){
       </div>
       <div class="detail-main">
         <div class="tab-nav">
-          ${['diag','cold','push','priority','log'].map((t,i)=>{
-            const labels = ['診斷','陌開','推進','優先度','日誌'];
+          ${['diag','cold','priority','push','log'].map((t,i)=>{
+            const labels = ['診斷','陌開準備','優先度','推進','日誌'];
             const warn = (t==='cold' && coldNeedsAttention(c)) ? '<span class="tab-warn-dot" title="案子已推進，但陌開資料還沒填"></span>' : '';
             return `<button class="tab-btn${activeTab===t?' active':''}" onclick="renderCustomer(${id},'${t}')">${labels[i]}${warn}</button>`;
           }).join('')}
@@ -2767,8 +2767,8 @@ function renderCustomer(id, activeTab){
         <div id="tab-content-area">
           ${activeTab==='diag' ? diagHTML(c,rec) : ''}
           ${activeTab==='cold' ? coldHTML(c) : ''}
-          ${activeTab==='push' ? pushHTML(c) : ''}
           ${activeTab==='priority' ? priorityHTML(c) : ''}
+          ${activeTab==='push' ? pushHTML(c) : ''}
           ${activeTab==='log' ? logHTML(c) : ''}
         </div>
       </div>
@@ -2887,7 +2887,7 @@ function diagHTML(c, rec){
 }
 
 function tabKey(label){
-  const map={診斷:'diag',陌開:'cold',推進:'push',優先度:'priority',日誌:'log',收款:'priority'};
+  const map={診斷:'diag',陌開:'cold',推進:'push',優先度:'priority',日誌:'log',收款:'push'};
   return map[label]||'diag';
 }
 
@@ -3007,45 +3007,19 @@ function pushHTML(c){
           <input class="field-input" value="${(c.pushPlan||{})[k]||''}" placeholder="${suggest?suggest[i]:'推進動作…'}" onblur="setPushPlan(${c.id},'${k}',this.value)">
         </div>`).join('')}
     </div>
-  </div>`;
+  </div>
+
+  ${contractPaymentHTML(c)}`;
 }
 
-// ── 優先度 Tab ──
-function priorityHTML(c){
-  const q = calcQ(c.prob,c.cost);
+// 合約 & 收款：從「優先度」拆出來的區塊。優先度只負責「值不值得投入」的判斷（象限評分），
+// 合約金額/收款狀態是案子已經在推進、甚至已簽約後的財務追蹤，性質上更貼近「推進」這個 tab，
+// 所以歸到這裡，接在 2 週推進計畫後面——推進到最後自然就是簽約收款。
+function contractPaymentHTML(c){
   const collected = calcCollected(c);
   const remain = (c.amount||0) - collected;
   const inv = c.invoice || defaultInvoice();
   return `
-  <div class="sec">
-    <div class="sec-title">象限評分（工具表 D 邏輯）</div>
-    <div class="field-group">
-      <div class="field-row">
-        <span class="field-label">評分標準</span>
-        <div style="padding:8px 14px;font-size:12px;color:var(--text3);line-height:1.7;">1=低 → 5=高<br>可能性：1 態度曖昧 / 3 需求明確 / 5 強烈需求<br>成本：1 1-2次溝通 / 3 多次會議 / 5 極高投入</div>
-      </div>
-      <div class="score-row">
-        <div class="score-item"><span class="score-label">成交可能性</span><input class="score-input" id="prob-${c.id}" type="number" min="1" max="5" step="0.5" value="${c.prob||''}" placeholder="1-5" onchange="saveScore(${c.id})"></div>
-        <div class="score-item"><span class="score-label">投入成本</span><input class="score-input" id="cost-${c.id}" type="number" min="1" max="5" step="0.5" value="${c.cost||''}" placeholder="1-5" onchange="saveScore(${c.id})"></div>
-        <div id="qdisplay-${c.id}">${q?`<span class="badge badge-${q}" title="${Q_DESC_FULL[q]}" style="cursor:help;">${Q_DESC[q]}</span>`:'<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>'}</div>
-      </div>
-    </div>
-  </div>
-
-  ${q==='Q4'?`
-  <div class="sec">
-    <div class="sec-title">3 問快篩</div>
-    <div class="field-group">
-      <div class="check-group">
-        ${['合約金額 > 公司平均單 × 3 倍（或超過半年業績目標）→ 全力投入','業界標竿 / 未來有持續合作 / 老闆要求拿下 → 戰略投入','FAE/PM 願意投入 + 有現成方案 + 決策流程清楚 → 可以做（設時限）'].map((q4q,i)=>`
-          <label class="check-item">
-            <input type="checkbox" ${(c.q4Screen||[])[i]?'checked':''} onchange="setQ4Screen(${c.id},${i},this.checked)">
-            <span style="font-size:12px;">${q4q}</span>
-          </label>`).join('')}
-      </div>
-    </div>
-  </div>`:''}
-
   <div class="sec">
     <div class="sec-title">合約 & 收款</div>
     <div class="field-group">
@@ -3086,6 +3060,42 @@ function priorityHTML(c){
     <button class="btn-add-pay" onclick="addPayment(${c.id})"><i class="ti ti-plus" style="font-size:12px;"></i> 新增款項</button>
     `:''}
   </div>`;
+}
+
+// ── 優先度 Tab ──
+// 只留「值不值得投入」的判斷本身（象限評分＋3問快篩）。合約金額/收款狀態不屬於「優先度判斷」，
+// 已經拆到「推進」tab 的 contractPaymentHTML() 裡了。
+function priorityHTML(c){
+  const q = calcQ(c.prob,c.cost);
+  return `
+  <div class="sec">
+    <div class="sec-title">象限評分（工具表 D 邏輯）</div>
+    <div class="field-group">
+      <div class="field-row">
+        <span class="field-label">評分標準</span>
+        <div style="padding:8px 14px;font-size:12px;color:var(--text3);line-height:1.7;">1=低 → 5=高<br>可能性：1 態度曖昧 / 3 需求明確 / 5 強烈需求<br>成本：1 1-2次溝通 / 3 多次會議 / 5 極高投入</div>
+      </div>
+      <div class="score-row">
+        <div class="score-item"><span class="score-label">成交可能性</span><input class="score-input" id="prob-${c.id}" type="number" min="1" max="5" step="0.5" value="${c.prob||''}" placeholder="1-5" onchange="saveScore(${c.id})"></div>
+        <div class="score-item"><span class="score-label">投入成本</span><input class="score-input" id="cost-${c.id}" type="number" min="1" max="5" step="0.5" value="${c.cost||''}" placeholder="1-5" onchange="saveScore(${c.id})"></div>
+        <div id="qdisplay-${c.id}">${q?`<span class="badge badge-${q}" title="${Q_DESC_FULL[q]}" style="cursor:help;">${Q_DESC[q]}</span>`:'<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>'}</div>
+      </div>
+    </div>
+  </div>
+
+  ${q==='Q4'?`
+  <div class="sec">
+    <div class="sec-title">3 問快篩</div>
+    <div class="field-group">
+      <div class="check-group">
+        ${['合約金額 > 公司平均單 × 3 倍（或超過半年業績目標）→ 全力投入','業界標竿 / 未來有持續合作 / 老闆要求拿下 → 戰略投入','FAE/PM 願意投入 + 有現成方案 + 決策流程清楚 → 可以做（設時限）'].map((q4q,i)=>`
+          <label class="check-item">
+            <input type="checkbox" ${(c.q4Screen||[])[i]?'checked':''} onchange="setQ4Screen(${c.id},${i},this.checked)">
+            <span style="font-size:12px;">${q4q}</span>
+          </label>`).join('')}
+      </div>
+    </div>
+  </div>`:''}`;
 }
 
 // ── 日誌 Tab ──
