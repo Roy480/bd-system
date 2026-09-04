@@ -3065,11 +3065,61 @@ function contractPaymentHTML(c){
 // ── 優先度 Tab ──
 // 只留「值不值得投入」的判斷本身（象限評分＋3問快篩）。合約金額/收款狀態不屬於「優先度判斷」，
 // 已經拆到「推進」tab 的 contractPaymentHTML() 裡了。
+// ── 四象限圖 ──
+// 拿掉「工具表 D」這個引用是因為不是每個學員都上過會用到那份講義的課，
+// 這裡改用一張自己說得清楚的視覺圖，兩軸 + 四象限標籤 + 目前案子的位置標記，
+// 不需要任何前情提要就能看懂。座標對應 calcQ() 的判斷邏輯：
+// 可能性/成本 4-5 算高，1-3 算低，分界線畫在 3.5。
+function quadrantChartHTML(prob, cost){
+  const W=320, H=280, padL=48, padR=16, padT=16, padB=40;
+  const gx0=padL, gx1=W-padR, gy0=padT, gy1=H-padB;
+  // 分界線畫在跟 calcQ() 判斷邏輯完全一致的位置：閾值 3.5（1-5 分制中的 62.5%），
+  // 不是幾何正中間——不然分數卡在 3 分附近時，視覺象限跟系統判斷的象限會對不上
+  const threshRatio = (3.5-1)/4; // 0.625
+  const midX = gx0 + threshRatio*(gx1-gx0);
+  const midY = gy1 - threshRatio*(gy1-gy0);
+  const hasScore = prob && cost;
+  const px = hasScore ? gx0 + (Math.min(Math.max(cost,1),5)-1)/4*(gx1-gx0) : 0;
+  const py = hasScore ? gy1 - (Math.min(Math.max(prob,1),5)-1)/4*(gy1-gy0) : 0;
+  return `
+  <div style="background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);padding:14px;">
+    <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:380px;display:block;margin:0 auto;font-family:var(--font);">
+      <!-- 四象限背景色塊 -->
+      <rect x="${gx0}" y="${gy0}" width="${midX-gx0}" height="${midY-gy0}" fill="#e8f5e9"/>
+      <rect x="${midX}" y="${gy0}" width="${gx1-midX}" height="${midY-gy0}" fill="#e3f2fd"/>
+      <rect x="${gx0}" y="${midY}" width="${midX-gx0}" height="${gy1-midY}" fill="#fff8e1"/>
+      <rect x="${midX}" y="${midY}" width="${gx1-midX}" height="${gy1-midY}" fill="#fce4ec"/>
+      <!-- 象限標籤 -->
+      <text x="${(gx0+midX)/2}" y="${(gy0+midY)/2-6}" text-anchor="middle" font-size="12" font-weight="700" fill="#1b5e20">Q2 快速贏</text>
+      <text x="${(gx0+midX)/2}" y="${(gy0+midY)/2+10}" text-anchor="middle" font-size="10" fill="#1b5e20">全力加碼</text>
+      <text x="${(midX+gx1)/2}" y="${(gy0+midY)/2-6}" text-anchor="middle" font-size="12" font-weight="700" fill="#0d47a1">Q4 戰略型</text>
+      <text x="${(midX+gx1)/2}" y="${(gy0+midY)/2+10}" text-anchor="middle" font-size="10" fill="#0d47a1">3問快篩</text>
+      <text x="${(gx0+midX)/2}" y="${(midY+gy1)/2-6}" text-anchor="middle" font-size="12" font-weight="700" fill="#e65100">Q1 觀望型</text>
+      <text x="${(gx0+midX)/2}" y="${(midY+gy1)/2+10}" text-anchor="middle" font-size="10" fill="#e65100">降頻維護</text>
+      <text x="${(midX+gx1)/2}" y="${(midY+gy1)/2-6}" text-anchor="middle" font-size="12" font-weight="700" fill="#880e4f">Q3 直接放</text>
+      <text x="${(midX+gx1)/2}" y="${(midY+gy1)/2+10}" text-anchor="middle" font-size="10" fill="#880e4f">最後通牒</text>
+      <!-- 分隔線與外框 -->
+      <line x1="${midX}" y1="${gy0}" x2="${midX}" y2="${gy1}" stroke="#fff" stroke-width="2"/>
+      <line x1="${gx0}" y1="${midY}" x2="${gx1}" y2="${midY}" stroke="#fff" stroke-width="2"/>
+      <rect x="${gx0}" y="${gy0}" width="${gx1-gx0}" height="${gy1-gy0}" fill="none" stroke="var(--border2)"/>
+      <!-- Y 軸：成交可能性 -->
+      <text x="14" y="${gy0+6}" font-size="10" fill="var(--text3)">高</text>
+      <text x="14" y="${gy1}" font-size="10" fill="var(--text3)">低</text>
+      <text x="14" y="${(gy0+gy1)/2}" font-size="10" fill="var(--text2)" transform="rotate(-90 14 ${(gy0+gy1)/2})" text-anchor="middle">成交可能性</text>
+      <!-- X 軸：投入成本 -->
+      <text x="${gx0}" y="${gy1+16}" font-size="10" fill="var(--text3)">低</text>
+      <text x="${gx1}" y="${gy1+16}" font-size="10" fill="var(--text3)" text-anchor="end">高</text>
+      <text x="${(gx0+gx1)/2}" y="${gy1+28}" font-size="10" fill="var(--text2)" text-anchor="middle">投入成本</text>
+      ${hasScore?`<circle cx="${px}" cy="${py}" r="7" fill="var(--primary)" stroke="#fff" stroke-width="2"/>`:''}
+    </svg>
+    ${!hasScore?'<div style="text-align:center;font-size:11px;color:var(--text3);margin-top:6px;">輸入上面兩個分數後，會標出這個案子目前的位置</div>':''}
+  </div>`;
+}
 function priorityHTML(c){
   const q = calcQ(c.prob,c.cost);
   return `
   <div class="sec">
-    <div class="sec-title">象限評分（工具表 D 邏輯）</div>
+    <div class="sec-title">象限評分</div>
     <div class="field-group">
       <div class="field-row">
         <span class="field-label">評分標準</span>
@@ -3081,6 +3131,11 @@ function priorityHTML(c){
         <div id="qdisplay-${c.id}">${q?`<span class="badge badge-${q}" title="${Q_DESC_FULL[q]}" style="cursor:help;">${Q_DESC[q]}</span>`:'<span style="color:var(--text3);font-size:12px;">輸入分數後自動判斷</span>'}</div>
       </div>
     </div>
+  </div>
+
+  <div class="sec">
+    <div class="sec-title">四象限圖</div>
+    ${quadrantChartHTML(c.prob, c.cost)}
   </div>
 
   ${q==='Q4'?`
