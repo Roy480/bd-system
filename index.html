@@ -2340,10 +2340,14 @@ function computeSIRevenue(){
   const groups = {};
   customers.forEach(c=>{
     const key = c.siPartner?.trim() || '未填寫';
-    if(!groups[key]) groups[key] = { name:key, dealCount:0, pipelineAmt:0, signedAmt:0 };
+    if(!groups[key]) groups[key] = { name:key, dealCount:0, pipelineAmt:0, signedAmt:0, collectedAmt:0, customers:[] };
     groups[key].dealCount++;
     if(c.status!=='暫緩跟進') groups[key].pipelineAmt += (c.amount||0);
-    if(c.status==='已簽約') groups[key].signedAmt += (c.amount||0);
+    if(c.status==='已簽約'){
+      groups[key].signedAmt += (c.amount||0);
+      groups[key].collectedAmt += calcCollected(c);
+    }
+    groups[key].customers.push(c);
   });
   const list = Object.values(groups);
   const totalSigned = list.reduce((s,g)=>s+g.signedAmt,0);
@@ -2362,7 +2366,10 @@ function siRevenueCardHTML(){
   return `<div class="goals-card">
     <div class="goals-card-header">
       <div class="goals-card-title">SI 通路佔比</div>
-      <div style="font-size:11px;color:var(--text3);">已簽約營收 NT$ ${fmt(totalSigned)}｜Pipeline 總額 NT$ ${fmt(totalPipeline)}</div>
+      <div style="display:flex;align-items:center;gap:10px;">
+        <div style="font-size:11px;color:var(--text3);">已簽約營收 NT$ ${fmt(totalSigned)}｜Pipeline 總額 NT$ ${fmt(totalPipeline)}</div>
+        <button class="btn btn-sm" onclick="renderSIPage()">查看完整分析 →</button>
+      </div>
     </div>
     ${hasUnfilled?`<div style="margin-bottom:10px;padding:8px 10px;background:var(--bg2);border-radius:8px;font-size:12px;display:flex;align-items:center;justify-content:space-between;gap:8px;">
       <span style="color:var(--text3);">還有案子沒填配合的 SI，可以先填占位字樣，之後想起來再改</span>
@@ -2386,6 +2393,61 @@ function bulkFillPlaceholderSI(){
   save();
   showOverview();
   showToast(`✓ 已幫 ${targets.length} 筆案子填入「待確認」`);
+}
+// ── SI 銷售分析（獨立頁面）──
+// 首頁那張「SI 通路佔比」卡片只看得到彙總數字，這裡是完整版：
+// 每家 SI 底下實際是哪些客戶、各自在什麼階段、金額多少，一次攤開來看，
+// 用來判斷通路依賴度、找出該加碼還是該淘汰的 SI 夥伴
+function renderSIPage(){
+  currentCustomerId = null;
+  renderSidebar();
+  const { list, totalSigned, totalPipeline } = computeSIRevenue();
+  const fmt = n => n.toLocaleString();
+  const totalCollected = list.reduce((s,g)=>s+g.collectedAmt,0);
+  const totalDeals = customers.length;
+
+  document.getElementById('main-panel').innerHTML = `
+    <div class="cust-page-header">
+      <button class="back-btn" onclick="showOverview()"><i class="ti ti-arrow-left"></i> Pipeline</button>
+      <div><div class="cust-page-title">SI 銷售分析</div></div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-num primary">${list.length}</div><div class="stat-label">配合的 SI 數</div></div>
+      <div class="stat-card"><div class="stat-num green">NT$ ${fmt(totalSigned)}</div><div class="stat-label">已簽約營收</div></div>
+      <div class="stat-card"><div class="stat-num primary" style="font-size:16px;padding-top:3px;">NT$ ${fmt(totalCollected)}</div><div class="stat-label">已收款</div></div>
+      <div class="stat-card"><div class="stat-num primary" style="font-size:16px;padding-top:3px;">NT$ ${fmt(totalPipeline)}</div><div class="stat-label">Pipeline 總額</div></div>
+    </div>
+
+    ${list.map(g=>{
+      const stageCounts = STATUSES.map(s=>({s, n:g.customers.filter(c=>c.status===s).length})).filter(x=>x.n>0);
+      return `
+      <div class="goals-card">
+        <div class="goals-card-header">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div class="goals-card-title" style="font-size:15px;">${g.name}</div>
+            ${g.name==='未填寫'?'<span style="font-size:11px;color:var(--red);">建議補上配合的 SI</span>':''}
+          </div>
+          <div style="font-size:12px;color:var(--text3);">${g.dealCount} 筆案子｜${stageCounts.map(x=>`${x.s} ${x.n}`).join('、')}</div>
+        </div>
+        <div class="goals-bar-wrap" style="margin-bottom:8px;"><div class="goals-bar-fill" style="width:${g.signedPct}%"></div></div>
+        <div class="goals-nums" style="margin-bottom:14px;">
+          已簽約 NT$ ${fmt(g.signedAmt)}${totalSigned?`（${g.signedPct}%）`:''}　｜　已收款 NT$ ${fmt(g.collectedAmt)}　｜　Pipeline NT$ ${fmt(g.pipelineAmt)}
+        </div>
+        <div style="border-top:1px solid var(--border2);padding-top:10px;">
+          ${g.customers.map(c=>`
+            <div style="display:flex;align-items:center;justify-content:space-between;padding:7px 0;cursor:pointer;" onclick="openCustomer(${c.id})">
+              <div style="display:flex;align-items:center;gap:8px;">
+                <span style="font-size:13px;font-weight:600;">${c.company||'（未填公司）'}</span>
+                <span style="font-size:11px;color:var(--text3);">${c.name?`${c.name}・`:''}${c.status}</span>
+              </div>
+              <span style="font-size:13px;color:var(--text2);">${c.amount?`NT$ ${fmt(c.amount)}`:'—'}</span>
+            </div>
+          `).join('')}
+        </div>
+      </div>`;
+    }).join('')}
+  `;
 }
 let currentActiveTab = 'diag';
 let sidebarCollapsed = {'已簽約':true,'暫緩跟進':true}; // 預設收合已完成/暫停的組，其他展開
