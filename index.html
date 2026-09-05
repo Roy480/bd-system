@@ -557,7 +557,7 @@ function seedDemoData(){
     "contact": "WhatsApp",
     "company": "泰昌製造",
     "status": "接觸中",
-    "abc": "A",
+    "abc": "B",
     "diagStuck": [],
     "diagDM": true,
     "diagOver2W": false,
@@ -832,7 +832,7 @@ function seedDemoData(){
     "contact": "Line/Email",
     "company": "和潤金控",
     "status": "接觸中",
-    "abc": "A",
+    "abc": "B",
     "diagStuck": [],
     "diagDM": false,
     "diagOver2W": false,
@@ -1009,7 +1009,7 @@ function seedDemoData(){
     "contact": "Line/Email",
     "company": "弘毅顧問",
     "status": "建立信任",
-    "abc": "A",
+    "abc": "C",
     "diagStuck": [
       "沒接觸到決策者"
     ],
@@ -1352,7 +1352,7 @@ function seedDemoData(){
     "contact": "電話",
     "company": "安揚生技",
     "status": "推進中",
-    "abc": "C",
+    "abc": "A",
     "diagStuck": [],
     "diagDM": false,
     "diagOver2W": false,
@@ -1412,17 +1412,22 @@ function seedDemoData(){
     "logs": [
       {
         "id": 28,
-        "date": "2026-09-03",
-        "text": "來電確認需求範圍"
+        "date": "2026-09-02",
+        "text": "PoC 上線測試進行中，等待部門主管回饋"
       },
       {
         "id": 29,
-        "date": "2026-08-30",
+        "date": "2026-08-15",
         "text": "寄送初步方案簡報"
+      },
+      {
+        "id": 30,
+        "date": "2026-08-10",
+        "text": "來電確認需求範圍"
       }
     ],
     "note": "曾是舊客戶，關係基礎好",
-    "updatedAt": "2026-09-03",
+    "updatedAt": "2026-09-02",
     "siPartner": "鼎信",
     "nextMeeting": {
       "at": "2026-09-11T14:00",
@@ -1525,7 +1530,7 @@ function seedDemoData(){
     "contact": "WhatsApp",
     "company": "鴻威電子",
     "status": "推進中",
-    "abc": "A",
+    "abc": "C",
     "diagStuck": [],
     "diagDM": false,
     "diagOver2W": false,
@@ -1614,7 +1619,7 @@ function seedDemoData(){
     "contact": "WhatsApp",
     "company": "昱盛精密",
     "status": "成交談判",
-    "abc": "C",
+    "abc": "A",
     "diagStuck": [
       "競品介入"
     ],
@@ -1809,7 +1814,7 @@ function seedDemoData(){
     "contact": "Email",
     "company": "晶采科技",
     "status": "成交談判",
-    "abc": "A",
+    "abc": "B",
     "diagStuck": [],
     "diagDM": false,
     "diagOver2W": false,
@@ -2073,7 +2078,7 @@ function seedDemoData(){
     "contact": "Email",
     "company": "翔宇資訊",
     "status": "暫緩跟進",
-    "abc": "A",
+    "abc": "C",
     "diagStuck": [
       "沒有確認「下一步」"
     ],
@@ -2147,7 +2152,7 @@ function seedDemoGoals(){
 }
 // 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
 // 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
-const DEMO_DATA_VERSION = 'v8-final-audit';
+const DEMO_DATA_VERSION = 'v9-abc-quadrant-fix';
 // 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
 // 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
 // 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
