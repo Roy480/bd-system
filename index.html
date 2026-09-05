@@ -527,6 +527,7 @@ function doLogin(){
   sessionStorage.setItem('bds_auth','1');
   document.getElementById('screen-login').classList.remove('active');
   document.getElementById('screen-main').classList.add('active');
+  ensureDemoDataFresh();
   updateDemoModeUI();
   showOverview();
 }
@@ -2160,6 +2161,21 @@ function seedDemoGoals(){
 // 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
 // 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
 const DEMO_DATA_VERSION = 'v6-logic-fix';
+// 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
+// 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
+// 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
+function ensureDemoDataFresh(){
+  if(!demoMode) return;
+  const storedVersion = localStorage.getItem('bds_demo_version');
+  if(customers.length===0 || storedVersion!==DEMO_DATA_VERSION){
+    customers = seedDemoData();
+    nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
+    save();
+    goals = seedDemoGoals();
+    saveGoals();
+    localStorage.setItem('bds_demo_version', DEMO_DATA_VERSION);
+  }
+}
 function toggleDemoMode(){
   if(!demoMode){
     if(!confirm('切換到示範模式：畫面會換成假資料，適合投影展示。你的真實客戶資料不會受影響，之後可以隨時切回來。要切換嗎？')) return;
@@ -2169,18 +2185,9 @@ function toggleDemoMode(){
   demoMode = !demoMode;
   localStorage.setItem('bds_mode', demoMode ? 'demo' : 'real');
   customers = JSON.parse(localStorage.getItem(customersKey())||'[]');
-  const storedVersion = localStorage.getItem('bds_demo_version');
-  if(demoMode && (customers.length===0 || storedVersion!==DEMO_DATA_VERSION)){
-    customers = seedDemoData();
-    save();
-    localStorage.setItem('bds_demo_version', DEMO_DATA_VERSION);
-  }
+  ensureDemoDataFresh();
   nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
   goals = JSON.parse(localStorage.getItem(goalsKey())||'{}');
-  if(demoMode && (!goals.annual && !goals.quarterly || storedVersion!==DEMO_DATA_VERSION)){
-    goals = seedDemoGoals();
-    saveGoals();
-  }
   currentCustomerId = null;
   goalsEditMode = false;
   updateDemoModeUI();
@@ -3538,7 +3545,7 @@ function importJSON(e){
 }
 
 // 初始化
-if(sessionStorage.getItem('bds_auth')==='1'){ updateDemoModeUI(); showOverview(); }
+if(sessionStorage.getItem('bds_auth')==='1'){ ensureDemoDataFresh(); updateDemoModeUI(); showOverview(); }
 </script>
 </body>
 </html>
