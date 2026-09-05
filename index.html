@@ -2210,8 +2210,11 @@ function formatMeetingTime(iso){
   return `${d.getMonth()+1}月${d.getDate()}日 ${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}`;
 }
 
+// 每種提醒點下去，直接跳到「能修那個問題」的分頁，不是統一回診斷頁：
+// 需要跟進→日誌（去記錄互動）、會議/報價/開票→推進（欄位都在那）、
+// 陌開未填→陌開準備、PoC/決策者→診斷（欄位在那）
 function reminderPill(c){
-  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}</span>`;
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id},'diag')">${c.company||c.name||'（未命名）'}</span>`;
 }
 const COLD_FIELD_LABELS = [
   ['coldTarget','目標客戶'],
@@ -2227,16 +2230,16 @@ function coldMissingLabels(c){
 function coldPill(c){
   const missing = coldMissingLabels(c);
   const note = missing.length ? `<span style="color:var(--text3);font-weight:400;">（缺：${missing.join('、')}）</span>` : '';
-  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}${note}</span>`;
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id},'cold')">${c.company||c.name||'（未命名）'}${note}</span>`;
 }
 function followPill(c){
   const note = needsMeetingNote(c) ? `<span style="color:var(--text3);font-weight:400;">（尚未安排下次會面）</span>` : '';
-  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}${note}</span>`;
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id},'log')">${c.company||c.name||'（未命名）'}${note}</span>`;
 }
 function meetingPill(c){
   const diffDays = Math.ceil((new Date(c.nextMeeting.at) - new Date()) / 86400000);
   const tier = diffDays<=0 ? 'tier-today' : diffDays===1 ? 'tier-tomorrow' : 'tier-soon';
-  return `<span class="reminder-pill ${tier}" onclick="openCustomer(${c.id})">跟 ${c.company||c.name||'（未命名）'} 的會議 ${formatMeetingTime(c.nextMeeting.at)}</span>`;
+  return `<span class="reminder-pill ${tier}" onclick="openCustomer(${c.id},'push')">跟 ${c.company||c.name||'（未命名）'} 的會議 ${formatMeetingTime(c.nextMeeting.at)}</span>`;
 }
 
 function toggleReminderGroup(id, btn){
@@ -2248,10 +2251,10 @@ function toggleReminderGroup(id, btn){
 }
 
 function quotePill(c){
-  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}</span>`;
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id},'push')">${c.company||c.name||'（未命名）'}</span>`;
 }
 function invoicePill(c){
-  return `<span class="reminder-pill" onclick="openCustomer(${c.id})">${c.company||c.name||'（未命名）'}</span>`;
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id},'push')">${c.company||c.name||'（未命名）'}</span>`;
 }
 
 function todayReminderHTML(){
@@ -2623,10 +2626,10 @@ function renderOverview(){
 // ══════════════════════════════════════
 // 客戶詳情頁
 // ══════════════════════════════════════
-function openCustomer(id){
+function openCustomer(id, tab){
   currentCustomerId = id;
   renderSidebar();
-  renderCustomer(id, currentActiveTab||'diag');
+  renderCustomer(id, tab || currentActiveTab || 'diag');
 }
 
 // ── 階段進度條 ──
