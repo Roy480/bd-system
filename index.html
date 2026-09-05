@@ -926,13 +926,7 @@ function seedDemoData(){
     "diagDM": true,
     "diagOver2W": false,
     "diagQuote": "「聽起來不錯，但要走簽核流程」",
-    "diagState": "PoC中",
-    "diagPoC": {
-      "startDate": "2026-08-25",
-      "endDate": "2026-09-22",
-      "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
-      "docLink": ""
-    },
+    "diagState": "推進中",
     "coldTarget": "總經理特助、東和物流",
     "coldBiz": "正在導入新系統，評估供應商中",
     "coldPain": "既有系統老舊，資安稽核過不了",
@@ -1017,7 +1011,6 @@ function seedDemoData(){
     "status": "建立信任",
     "abc": "A",
     "diagStuck": [
-      "陌開沒回應",
       "沒接觸到決策者"
     ],
     "diagDM": false,
@@ -1042,7 +1035,7 @@ function seedDemoData(){
     "pushPressure": null,
     "pushOpponent": null,
     "pushPlan": {},
-    "prob": "5",
+    "prob": "2",
     "cost": "5",
     "amount": 910000,
     "q4Screen": [
@@ -1366,8 +1359,8 @@ function seedDemoData(){
     "diagQuote": "「這個我要跟主管報告一下」",
     "diagState": "PoC中",
     "diagPoC": {
-      "startDate": "2026-08-25",
-      "endDate": "2026-09-22",
+      "startDate": "2026-08-20",
+      "endDate": "2026-09-16",
       "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
       "docLink": ""
     },
@@ -1823,8 +1816,8 @@ function seedDemoData(){
     "diagQuote": "「這個我要跟主管報告一下」",
     "diagState": "PoC中",
     "diagPoC": {
-      "startDate": "2026-08-25",
-      "endDate": "2026-09-22",
+      "startDate": "2026-08-27",
+      "endDate": "2026-09-24",
       "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
       "docLink": ""
     },
@@ -1911,12 +1904,6 @@ function seedDemoData(){
     "diagOver2W": false,
     "diagQuote": "「聽起來不錯，但要走簽核流程」",
     "diagState": "推進中",
-    "diagPoC": {
-      "startDate": "2026-08-25",
-      "endDate": "2026-09-22",
-      "criteria": "完成 3 個部門的上線測試，錯誤率低於 1%，IT 主管簽核驗收",
-      "docLink": ""
-    },
     "coldTarget": "數位長、景旺光電",
     "coldBiz": "近期擴廠，資安需求同步提升",
     "coldPain": "內部人力吃緊，想找外部整合方案",
@@ -2160,7 +2147,7 @@ function seedDemoGoals(){
 }
 // 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
 // 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
-const DEMO_DATA_VERSION = 'v7-log-date-fix';
+const DEMO_DATA_VERSION = 'v8-final-audit';
 // 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
 // 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
 // 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
