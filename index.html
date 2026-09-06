@@ -439,6 +439,8 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
       <div class="topbar-date" id="topbar-date"></div>
       <button class="topbar-icon-btn" id="demo-toggle-btn" onclick="toggleDemoMode()" title="切換到示範模式"><i class="ti ti-presentation"></i></button>
       <button class="topbar-icon-btn" onclick="exportExcel()" title="匯出 Excel"><i class="ti ti-table-export"></i></button>
+      <button class="topbar-icon-btn" onclick="document.getElementById('import-excel-file').click()" title="匯入 Excel（新增客戶）"><i class="ti ti-file-spreadsheet"></i></button>
+      <input type="file" id="import-excel-file" accept=".xlsx,.xls,.csv" style="display:none" onchange="importExcel(event)">
       <button class="topbar-icon-btn" onclick="exportJSON()" title="備份資料"><i class="ti ti-download"></i></button>
       <button class="topbar-icon-btn" onclick="document.getElementById('import-file').click()" title="還原備份"><i class="ti ti-upload"></i></button>
       <input type="file" id="import-file" accept=".json" style="display:none" onchange="importJSON(event)">
@@ -456,6 +458,9 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
         </button>
         <button class="nav-rail-btn" id="nav-market" onclick="switchSection('market')" title="市場">
           <i class="ti ti-world"></i><span>市場</span>
+        </button>
+        <button class="nav-rail-btn" id="nav-templates" onclick="switchSection('templates')" title="範本">
+          <i class="ti ti-file-text"></i><span>範本</span>
         </button>
       </div>
       <div id="sidebar-customers" class="sidebar-customers"></div>
@@ -2401,9 +2406,56 @@ function seedDemoMarket(){
       link:'' },
   ];
 }
-// 示範資料版本號：每次改動 seedDemoData()/seedDemoProducts()/seedDemoMarket() 的內容
-// 就要更新這個版本號，不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新內容。
-const DEMO_DATA_VERSION = 'v13-product-content';
+// 示範用提示詞範本：對應今天示範的「示範關鍵步驟」五步方法論，
+// 給還沒用過 Claude 建工具的人一個「怎麼開口講需求」的起手式，不是現成的網站檔案。
+function seedDemoTemplates(){
+  return [
+    { id:1, name:'起手式：從零開始建立 Dashboard', category:'起手式',
+      description:'第一次跟 Claude 建自己的工具，不知道怎麼開口的時候用。照著填空，一次講清楚你每天重複在做的事。',
+      content:`我是做 [你的職務，例如：B2B業務/BD]，我想做一個網頁工具，記錄我每天在追蹤的 [客戶/案子/任務]。
+
+我每天重複在做的事情是：[具體寫下你每天在做什麼，例如：追蹤每個客戶目前卡在哪個階段、下次要跟進什麼、有沒有報價]
+
+我希望這個工具至少要有：
+1. 一個列表，看得到我手上所有 [客戶/案子] 目前的狀態
+2. 點進去可以看到詳細資訊，並且可以更新狀態
+3. 首頁要有提醒功能，告訴我今天該做什麼
+
+技術上的要求：
+- 做成單一個 HTML 檔案，不需要後端伺服器
+- 資料存在瀏覽器的 localStorage 就好
+- 先做一個最小可用的版本，能跑起來就好，不用一次做到完美，我們可以之後再慢慢加功能`,
+      files:[] },
+    { id:2, name:'加功能：擴充既有 Dashboard', category:'加功能',
+      description:'手上已經有一版基礎工具，想再加新功能的時候用。',
+      content:`我現在有一個用 HTML+localStorage 做的網頁工具（附件是目前的檔案／或請貼上你現在的檔案內容）。
+
+我想加一個新功能：[具體描述，例如：我想在客戶詳情頁加一個「下次會面時間」的欄位，首頁要提醒我 3 天內有哪些會面]
+
+這個功能要解決的問題是：[為什麼需要這個功能，實際的痛點是什麼]
+
+請先跟我確認：
+1. 這個功能應該放在現有的哪個分頁／區塊，還是要獨立開一個新分頁？
+2. 有沒有可能跟我現有的其他功能邏輯衝突？
+
+確認完架構之後再開始改，不要一次改太多東西。`,
+      files:[] },
+    { id:3, name:'除錯調整：東西跟預期不一樣', category:'除錯調整',
+      description:'做出來的東西邏輯怪怪的、或跟你想的不一樣時，怎麼跟 Claude 講清楚問題。',
+      content:`我發現一個問題：[具體描述你看到的現象，例如：這個客戶已經標記「已簽約」了，但決策者接觸欄位卻顯示「否」]
+
+我預期應該是：[你覺得合理的邏輯應該是什麼樣子]
+
+請你：
+1. 先解釋為什麼會發生這個狀況（是資料本身的問題，還是程式邏輯的問題）
+2. 檢查有沒有其他地方也有類似的矛盾，不要只修我提到的這一個
+3. 修好之後跟我說你改了什麼、為什麼這樣改`,
+      files:[] },
+  ];
+}
+// 示範資料版本號：每次改動 seedDemoData()/seedDemoProducts()/seedDemoMarket()/seedDemoTemplates()
+// 的內容就要更新這個版本號，不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新內容。
+const DEMO_DATA_VERSION = 'v14-templates';
 // 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
 // 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
 // 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
@@ -2422,6 +2474,9 @@ function ensureDemoDataFresh(){
     marketItems = seedDemoMarket();
     nextMarketId = marketItems.length ? Math.max(...marketItems.map(m=>m.id))+1 : 1;
     saveMarketItems();
+    templates = seedDemoTemplates();
+    nextTemplateId = templates.length ? Math.max(...templates.map(t=>t.id))+1 : 1;
+    saveTemplates();
     localStorage.setItem('bds_demo_version', DEMO_DATA_VERSION);
   }
 }
@@ -2441,6 +2496,8 @@ function toggleDemoMode(){
   nextProductId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
   marketItems = JSON.parse(localStorage.getItem(marketKey())||'[]');
   nextMarketId = marketItems.length ? Math.max(...marketItems.map(m=>m.id))+1 : 1;
+  templates = JSON.parse(localStorage.getItem(templatesKey())||'[]');
+  nextTemplateId = templates.length ? Math.max(...templates.map(t=>t.id))+1 : 1;
   currentCustomerId = null;
   currentProductId = null;
   currentSection = 'customers';
@@ -2818,6 +2875,7 @@ function switchSection(section){
   document.getElementById('nav-customers').classList.toggle('active', section==='customers');
   document.getElementById('nav-products').classList.toggle('active', section==='products');
   document.getElementById('nav-market').classList.toggle('active', section==='market');
+  document.getElementById('nav-templates').classList.toggle('active', section==='templates');
   if(section==='customers'){
     showOverview();
   } else if(section==='products'){
@@ -2827,6 +2885,10 @@ function switchSection(section){
   } else if(section==='market'){
     renderMarketSidebar();
     renderMarketFeed();
+  } else if(section==='templates'){
+    currentTemplateId = null;
+    renderTemplateSidebar();
+    showTemplateOverview();
   }
 }
 
@@ -3155,6 +3217,197 @@ function deleteMarketItem(id){
   marketItems = marketItems.filter(m=>m.id!==id);
   saveMarketItems();
   renderMarketFeed();
+}
+
+// ══════════════════════════════════════
+// 範本（左側導覽第四個入口）
+// ══════════════════════════════════════
+// 這裡放的是「提示詞範本」，不是現成的程式碼檔案——今天的工作坊精神是「從零開始建」，
+// 直接給大家做好的網站反而違背這件事。範本的作用是讓大家「怎麼跟 Claude 講需求」講得更順，
+// 但東西還是自己動手做出來的。也支援附加小檔案（例如空白起始骨架），跟產品目錄同一套上傳機制。
+function templatesKey(){ return demoMode ? 'bds_demo_templates_v1' : 'bds_templates_v1'; }
+let templates = JSON.parse(localStorage.getItem(templatesKey())||'[]');
+let nextTemplateId = templates.length ? Math.max(...templates.map(t=>t.id))+1 : 1;
+let currentTemplateId = null;
+let editingTemplateId = null;
+function saveTemplates(){ localStorage.setItem(templatesKey(), JSON.stringify(templates)); }
+
+function renderTemplateSidebar(){
+  const q = document.getElementById('tb-search')?.value?.toLowerCase()||'';
+  const list = templates.filter(t=>!q || t.name.toLowerCase().includes(q));
+  document.getElementById('sidebar-customers').innerHTML = `
+    <div class="sidebar-header">
+      <input class="sidebar-search" id="tb-search" type="text" placeholder="搜尋範本…" value="${q}" oninput="renderTemplateSidebar()">
+      <button class="btn btn-sm btn-primary" style="flex-shrink:0;padding:6px 10px;" onclick="openTemplateModal()" title="新增範本"><i class="ti ti-plus"></i></button>
+    </div>
+    <div class="sidebar-stats"><span>${templates.length} 個範本</span></div>
+    <div class="sidebar-list">
+      ${list.length ? list.map(t=>`
+        <div class="sidebar-item${currentTemplateId===t.id?' active':''}" onclick="openTemplate(${t.id})">
+          <div class="avatar" style="background:${avatarColor(t.name)[0]};color:${avatarColor(t.name)[1]}"><i class="ti ti-file-text"></i></div>
+          <div class="sidebar-item-info">
+            <div class="sidebar-item-name">${t.name}</div>
+            <div class="sidebar-item-sub">${t.category||'範本'}</div>
+          </div>
+        </div>`).join('') : `<div class="sidebar-empty">${templates.length?'沒有符合的範本':'還沒有範本<br>點右上角「+」新增'}</div>`}
+    </div>
+  `;
+}
+function showTemplateOverview(){
+  document.getElementById('main-panel').innerHTML = `
+    <div class="pipeline-header">
+      <div class="pipeline-title">範本</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-primary" onclick="openTemplateModal()"><i class="ti ti-plus"></i> 新增範本</button>
+      </div>
+    </div>
+    <div style="color:var(--text3);font-size:13px;margin-top:20px;line-height:1.7;">
+      這裡放的是「跟 Claude 講需求」的提示詞範本，不是現成的網站檔案——今天的重點是自己動手做出來，
+      範本只是幫你把需求講得更清楚、更快上手。從左側選一個範本查看內容，複製後貼進你自己的 Claude 對話框開始用。
+    </div>
+  `;
+}
+function openTemplate(id){
+  currentTemplateId = id;
+  renderTemplateSidebar();
+  renderTemplateDetail(id);
+}
+function renderTemplateDetail(id){
+  const t = templates.find(x=>x.id===id);
+  if(!t) return;
+  document.getElementById('main-panel').innerHTML = `
+    <div class="cust-page-header">
+      <button class="back-btn" onclick="switchSection('templates')"><i class="ti ti-arrow-left"></i> 範本</button>
+      <div>
+        <div class="cust-page-title">${t.name}</div>
+        <div class="cust-page-sub">${t.category||''}</div>
+      </div>
+      <div class="cust-page-actions">
+        <button class="btn btn-sm" onclick="openTemplateModal(${id})"><i class="ti ti-pencil"></i> 編輯</button>
+        <button class="btn btn-sm" onclick="deleteTemplate(${id})" style="color:var(--red)"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">什麼時候用這個範本</div>
+      <div style="padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.7;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);">
+        ${t.description ? t.description.replace(/\n/g,'<br>') : '<span style="color:var(--text3);">還沒填說明</span>'}
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">提示詞內容（複製後貼進你的 Claude 對話框）</div>
+      <div style="position:relative;">
+        <textarea readonly style="width:100%;min-height:220px;padding:14px;font-size:13px;line-height:1.7;font-family:var(--font);border:1px solid var(--border2);border-radius:var(--radius);background:var(--card);color:var(--text2);resize:vertical;">${t.content||''}</textarea>
+        <button class="btn btn-sm btn-primary" style="position:absolute;top:10px;right:10px;" onclick="copyTemplateContent(${id})"><i class="ti ti-copy"></i> 複製</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">附加檔案（選填）</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;">單檔限制 1.5MB，例如可以附一個空白起始骨架檔案。</div>
+      <div class="field-group">
+        ${(t.files||[]).length===0?'<div style="padding:14px;color:var(--text3);font-size:13px;">還沒有附加檔案</div>':
+          (t.files||[]).map(f=>`
+          <div class="field-row" style="align-items:center;">
+            <span style="flex:1;font-size:13px;padding:10px 14px;"><i class="ti ti-paperclip" style="margin-right:6px;color:var(--text3);"></i>${f.name} <span style="color:var(--text3);font-size:11px;">(${(f.size/1024).toFixed(0)} KB)</span></span>
+            <a href="${f.dataUrl}" download="${f.name}" class="btn btn-sm" style="margin-right:6px;">下載</a>
+            <button style="background:none;border:none;cursor:pointer;color:var(--red);" onclick="deleteTemplateFile(${id},'${f.id}')"><i class="ti ti-trash"></i></button>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:10px;">
+        <input type="file" id="tf-input-${id}" style="display:none" onchange="handleTemplateFileUpload(${id}, this)">
+        <button class="btn btn-sm" onclick="document.getElementById('tf-input-${id}').click()"><i class="ti ti-upload"></i> 上傳檔案</button>
+      </div>
+    </div>
+  `;
+}
+function copyTemplateContent(id){
+  const t = templates.find(x=>x.id===id);
+  navigator.clipboard.writeText(t.content||'').then(()=>showToast('✓ 已複製到剪貼簿')).catch(()=>showToast('複製失敗，請手動選取文字複製'));
+}
+function openTemplateModal(id=null){
+  editingTemplateId = id;
+  const existing = id ? templates.find(x=>x.id===id) : null;
+  const modalHtml = `
+    <div class="modal">
+      <h3>${id?'編輯範本':'新增範本'}</h3>
+      <div class="field"><label>範本名稱 *</label><input id="t-name" type="text" placeholder="例：從零開始建立 Dashboard" value="${existing?.name||''}"></div>
+      <div class="field"><label>分類</label><input id="t-category" type="text" placeholder="例：起手式 / 加功能 / 除錯調整" value="${existing?.category||''}"></div>
+      <div class="field"><label>什麼時候用</label><textarea id="t-description" rows="2" placeholder="這個範本適合什麼情境使用">${existing?.description||''}</textarea></div>
+      <div class="field"><label>提示詞內容 *</label><textarea id="t-content" rows="8" placeholder="貼上完整的提示詞文字…">${existing?.content||''}</textarea></div>
+      <div class="modal-btns">
+        <button class="btn-confirm" onclick="saveTemplate()">儲存</button>
+        <button class="btn-cancel-modal" onclick="closeTemplateModal()">取消</button>
+      </div>
+    </div>`;
+  let bg = document.getElementById('template-modal-bg');
+  if(!bg){
+    bg = document.createElement('div');
+    bg.id = 'template-modal-bg';
+    bg.className = 'modal-bg';
+    bg.onclick = (e) => { if(e.target===bg) closeTemplateModal(); };
+    document.body.appendChild(bg);
+  }
+  bg.innerHTML = modalHtml;
+  bg.style.display = 'flex';
+}
+function closeTemplateModal(){
+  const bg = document.getElementById('template-modal-bg');
+  if(bg) bg.style.display = 'none';
+}
+function saveTemplate(){
+  const name = document.getElementById('t-name').value.trim();
+  const content = document.getElementById('t-content').value.trim();
+  if(!name){ document.getElementById('t-name').focus(); return; }
+  if(!content){ document.getElementById('t-content').focus(); return; }
+  const data = {
+    name,
+    category: document.getElementById('t-category').value.trim(),
+    description: document.getElementById('t-description').value.trim(),
+    content,
+  };
+  if(editingTemplateId){
+    Object.assign(templates.find(x=>x.id===editingTemplateId), data);
+  } else {
+    templates.unshift({id:nextTemplateId++, ...data, files:[]});
+  }
+  saveTemplates();
+  closeTemplateModal();
+  renderTemplateSidebar();
+  if(editingTemplateId) renderTemplateDetail(editingTemplateId);
+  showToast(editingTemplateId?'已更新範本':'✓ 新增範本成功');
+}
+function deleteTemplate(id){
+  if(!confirm('確定要刪除這個範本嗎？')) return;
+  templates = templates.filter(t=>t.id!==id);
+  saveTemplates();
+  currentTemplateId = null;
+  renderTemplateSidebar();
+  showTemplateOverview();
+}
+function handleTemplateFileUpload(id, inputEl){
+  const file = inputEl.files[0];
+  if(!file) return;
+  if(file.size > PRODUCT_FILE_SIZE_LIMIT){
+    alert(`這個檔案 ${(file.size/1024/1024).toFixed(1)}MB，超過單檔 1.5MB 的限制。`);
+    inputEl.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const t = templates.find(x=>x.id===id);
+    if(!t.files) t.files = [];
+    t.files.push({ id: Date.now()+'', name: file.name, size: file.size, type: file.type, dataUrl: e.target.result, uploadedAt: TODAY });
+    saveTemplates();
+    renderTemplateDetail(id);
+    showToast('✓ 檔案上傳成功');
+  };
+  reader.readAsDataURL(file);
+}
+function deleteTemplateFile(id, fileId){
+  if(!confirm('確定要刪除這個檔案嗎？')) return;
+  const t = templates.find(x=>x.id===id);
+  t.files = (t.files||[]).filter(f=>f.id!==fileId);
+  saveTemplates();
+  renderTemplateDetail(id);
 }
 
 function toggleSidebarGroup(status){
@@ -4131,6 +4384,83 @@ function deleteCustomer(id){
 // ══════════════════════════════════════
 // 匯出 / 備份
 // ══════════════════════════════════════
+// 匯入 Excel：新增客戶用（不覆蓋現有資料）。因為學員上傳的是自己的 Excel，
+// 欄位名稱不會跟系統匯出的格式一模一樣，所以用「欄位標題比對」而不是「固定欄位順序」，
+// 常見的同義詞（例如「公司」「客戶名稱」都算「客戶公司」）都收進來，降低匯入失敗率。
+// 唯一必要欄位是「客戶公司」，其他欄位缺了就留空，不會擋住匯入。
+const EXCEL_IMPORT_ALIASES = {
+  company: ['客戶公司','公司','公司名稱','客戶名稱','客戶','company','Company'],
+  name: ['窗口姓名','姓名','聯絡人','窗口','name','Name'],
+  title: ['職稱','title','Title'],
+  contact: ['聯絡方式','電話','email','Email','聯絡電話','phone'],
+  status: ['漏斗階段','階段','狀態','目前階段','status'],
+  abc: ['客戶分類','分類','abc','ABC'],
+  amount: ['合約金額','金額','合約總額','amount'],
+  note: ['備註','備注','note','Note'],
+  siPartner: ['配合的 SI','SI','通路','配合SI','經銷商'],
+};
+function findExcelCol(headers, aliases){
+  const norm = h => (h==null?'':String(h)).trim().toLowerCase();
+  for(const alias of aliases){
+    const idx = headers.findIndex(h => norm(h)===norm(alias));
+    if(idx!==-1) return idx;
+  }
+  return -1;
+}
+function importExcel(e){
+  const file = e.target.files[0]; if(!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      const data = new Uint8Array(ev.target.result);
+      const wb = XLSX.read(data, {type:'array'});
+      const sheet = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(sheet, {header:1, raw:false, defval:''});
+      if(rows.length < 2){ showToast('這個檔案裡沒有資料列'); e.target.value=''; return; }
+
+      const headers = rows[0];
+      const colIdx = {};
+      for(const key in EXCEL_IMPORT_ALIASES){ colIdx[key] = findExcelCol(headers, EXCEL_IMPORT_ALIASES[key]); }
+
+      if(colIdx.company===-1){
+        alert('這個檔案第一列（標題列）裡找不到「客戶公司」這一欄。\n\n請確認你的 Excel 第一列有一欄叫「客戶公司」（或「公司」「公司名稱」也可以），再重新上傳一次。');
+        e.target.value=''; return;
+      }
+
+      const dataRows = rows.slice(1).filter(r => String(r[colIdx.company]||'').trim());
+      if(dataRows.length===0){ showToast('客戶公司欄位都是空的，沒有匯入任何資料'); e.target.value=''; return; }
+
+      if(!confirm(`偵測到 ${dataRows.length} 筆資料，確定要新增進系統嗎？\n\n這是「新增」不是「覆蓋」，你現有的客戶不會被動到。`)){ e.target.value=''; return; }
+
+      let added = 0;
+      dataRows.forEach(r=>{
+        const get = key => colIdx[key]!==-1 ? String(r[colIdx[key]]||'').trim() : '';
+        const company = get('company');
+        if(!company) return;
+        let status = get('status').replace(/類$/,'');
+        if(!STATUSES.includes(status)) status = '接觸中';
+        let abc = get('abc').replace(/類$/,'').toUpperCase();
+        if(!['A','B','C'].includes(abc)) abc = '';
+        const amountRaw = get('amount').replace(/[^0-9.]/g,'');
+        const amount = amountRaw ? parseFloat(amountRaw) : 0;
+        customers.unshift({
+          id: nextId++, company, name:get('name'), title:get('title'), contact:get('contact'),
+          siPartner:get('siPartner'), status, abc, amount, note:get('note'),
+          updatedAt: TODAY, invoice: defaultInvoice(), logs:[], prob:'', cost:'', signedDate:'',
+        });
+        added++;
+      });
+      save();
+      showOverview();
+      showToast(`✓ 已從 Excel 新增 ${added} 筆客戶`);
+    } catch(err){
+      console.error(err);
+      showToast('檔案讀取失敗，請確認上傳的是 Excel（.xlsx/.xls）或 CSV 檔');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+  e.target.value='';
+}
 function exportExcel(){
   const wb = XLSX.utils.book_new();
   const rows1 = [['客戶公司','配合的 SI','窗口姓名','職稱','聯絡方式','漏斗階段','客戶分類','成交可能性','投入成本','象限','合約金額','已收款','待收款','備註','最後更新']];
