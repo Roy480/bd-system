@@ -77,6 +77,11 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
    左側客戶側欄 (HubSpot 風格)
 ════════════════════════════════ */
 .app-layout { display: flex; flex: 1; min-height: 0; width: 100%; }
+.nav-rail { width: 64px; flex-shrink: 0; background: var(--bg2); border-right: 1px solid var(--border2); display: flex; flex-direction: column; align-items: center; padding: 14px 0; gap: 6px; }
+.nav-rail-btn { width: 52px; display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 8px 0; background: none; border: none; border-radius: var(--radius); cursor: pointer; color: var(--text3); font-size: 10px; font-family: var(--font); }
+.nav-rail-btn i { font-size: 19px; }
+.nav-rail-btn:hover { background: var(--border2); color: var(--text2); }
+.nav-rail-btn.active { background: var(--primary); color: #fff; }
 .sidebar-customers { width: 280px; flex-shrink: 0; border-right: 1px solid var(--border2); background: var(--card); display: flex; flex-direction: column; overflow: hidden; }
 .sidebar-header { padding: 12px 14px; border-bottom: 1px solid var(--border2); display: flex; gap: 6px; }
 .sidebar-search { flex: 1; min-width: 0; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius); font-size: 13px; font-family: var(--font); background: var(--card); color: var(--text); }
@@ -118,6 +123,7 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
 
 @media(max-width:760px){
   .app-layout { flex-direction: column; }
+  .nav-rail { width: 100%; flex-direction: row; padding: 6px 10px; border-right: none; border-bottom: 1px solid var(--border2); }
   .sidebar-customers { width: 100%; max-height: 200px; border-right: none; border-bottom: 1px solid var(--border2); }
   .detail-body { flex-direction: column; }
   .detail-sidebar { width: 100%; }
@@ -441,6 +447,14 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
   </div>
   <div class="main-body">
     <div class="app-layout">
+      <div class="nav-rail">
+        <button class="nav-rail-btn active" id="nav-customers" onclick="switchSection('customers')" title="客戶">
+          <i class="ti ti-users"></i><span>客戶</span>
+        </button>
+        <button class="nav-rail-btn" id="nav-products" onclick="switchSection('products')" title="產品目錄">
+          <i class="ti ti-box"></i><span>產品</span>
+        </button>
+      </div>
       <div id="sidebar-customers" class="sidebar-customers"></div>
       <div id="main-panel" class="main-panel"></div>
     </div>
@@ -470,6 +484,21 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
     <div class="modal-btns">
       <button class="btn-confirm" onclick="saveCustomer()">儲存</button>
       <button class="btn-cancel-modal" onclick="closeModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div id="product-modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeProductModal()">
+  <div class="modal">
+    <h3 id="product-modal-title">新增產品</h3>
+    <div class="field"><label>產品名稱 *</label><input id="p-name" type="text" placeholder="例：Okta Identity Cloud"></div>
+    <div class="field"><label>廠牌／供應商</label><input id="p-vendor" type="text" placeholder="例：Okta"></div>
+    <div class="field"><label>分類</label><input id="p-category" type="text" placeholder="例：身分驗證 / EDR / SIEM"></div>
+    <div class="field"><label>參考單價（選填）</label><input id="p-price" type="text" placeholder="依規模報價 / NT$xxx 起"></div>
+    <div class="field"><label>產品說明</label><textarea id="p-description" rows="3" placeholder="核心賣點、適合的客戶輪廓…"></textarea></div>
+    <div class="modal-btns">
+      <button class="btn-confirm" onclick="saveProduct()">儲存</button>
+      <button class="btn-cancel-modal" onclick="closeProductModal()">取消</button>
     </div>
   </div>
 </div>
@@ -2152,9 +2181,38 @@ function seedDemoGoals(){
   const q = Math.floor(new Date().getMonth()/3)+1;
   return { annual:{[String(y)]:12000000}, quarterly:{[`${y}-Q${q}`]:3000000} };
 }
+// 示範用產品目錄：涵蓋幾條常見資安產品線，供示範「產品目錄」跟之後的「產品銷售佔比」使用
+function seedDemoProducts(){
+  const d = (offset) => { const dt = new Date(); dt.setDate(dt.getDate()+offset); return dt.toISOString().slice(0,10); };
+  return [
+    { id:1, name:'Okta Identity Cloud', vendor:'Okta', category:'身分驗證 IAM', price:'依使用者數計價，年約制',
+      description:'單一登入＋多因子驗證，適合員工人數 200 人以上、有多套雲端系統要整合登入的企業。',
+      updates:[
+        { id:101, date:d(-10), text:'新增台灣本地客服窗口，教育訓練材料補齊中文版' },
+        { id:102, date:d(-40), text:'新版支援 Passkey 免密碼登入' },
+      ] },
+    { id:2, name:'Akamai Guardicore', vendor:'Akamai', category:'零信任 / 微分段', price:'依保護節點數計價',
+      description:'資料中心與雲端環境的微分段方案，適合金融、醫療等高合規要求產業。',
+      updates:[ { id:103, date:d(-20), text:'新增台灣資料中心節點，延遲降低' } ] },
+    { id:3, name:'Citrix DaaS', vendor:'Citrix', category:'虛擬桌面 VDI', price:'依授權數計價，年約制',
+      description:'雲端虛擬桌面服務，適合混合辦公、需要集中管控端點資料的企業。',
+      updates:[] },
+    { id:4, name:'TXOne Edge', vendor:'TXOne Networks', category:'OT／工控資安', price:'依產線設備數報價',
+      description:'工控網路資安防護，鎖定製造業產線設備，OT/IT 網路區隔為核心賣點。',
+      updates:[
+        { id:104, date:d(-5), text:'新模組支援舊型 PLC 設備的流量分析' },
+      ] },
+    { id:5, name:'Gurucul UEBA', vendor:'Gurucul', category:'使用者行為分析', price:'依資料量計價，年約制',
+      description:'用戶與實體行為分析，用機器學習偵測異常存取行為，適合已有 SIEM 但誤報率過高的客戶。',
+      updates:[] },
+    { id:6, name:'Datadog Cloud SIEM', vendor:'Datadog', category:'雲端監控 / SIEM', price:'依資料量與主機數計價',
+      description:'雲端原生的監控與資安事件管理平台，適合已經全面上雲、開發團隊主導採購決策的企業。',
+      updates:[ { id:105, date:d(-15), text:'新增台幣報價方案，簡化採購流程' } ] },
+  ];
+}
 // 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
 // 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
-const DEMO_DATA_VERSION = 'v10-renewal';
+const DEMO_DATA_VERSION = 'v11-products';
 // 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
 // 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
 // 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
@@ -2167,6 +2225,9 @@ function ensureDemoDataFresh(){
     save();
     goals = seedDemoGoals();
     saveGoals();
+    products = seedDemoProducts();
+    nextProductId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
+    saveProducts();
     localStorage.setItem('bds_demo_version', DEMO_DATA_VERSION);
   }
 }
@@ -2182,7 +2243,11 @@ function toggleDemoMode(){
   ensureDemoDataFresh();
   nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
   goals = JSON.parse(localStorage.getItem(goalsKey())||'{}');
+  products = JSON.parse(localStorage.getItem(productsKey())||'[]');
+  nextProductId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
   currentCustomerId = null;
+  currentProductId = null;
+  currentSection = 'customers';
   goalsEditMode = false;
   updateDemoModeUI();
   showOverview();
@@ -2540,6 +2605,172 @@ function renderSIPage(){
 let currentActiveTab = 'diag';
 let sidebarCollapsed = {'已簽約':true,'暫緩跟進':true}; // 預設收合已完成/暫停的組，其他展開
 
+// ══════════════════════════════════════
+// 產品目錄（左側導覽的第二個入口）
+// ══════════════════════════════════════
+// 產品資料跟客戶資料一樣分真實／示範兩套 key，切換示範模式時一起跟著換，
+// 邏輯完全比照 customersKey()，不要讓產品目錄在示範模式下混到真實產品。
+function productsKey(){ return demoMode ? 'bds_demo_products_v1' : 'bds_products_v1'; }
+let products = JSON.parse(localStorage.getItem(productsKey())||'[]');
+let nextProductId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
+let currentSection = 'customers';
+let currentProductId = null;
+function saveProducts(){ localStorage.setItem(productsKey(), JSON.stringify(products)); }
+
+function switchSection(section){
+  currentSection = section;
+  document.getElementById('nav-customers').classList.toggle('active', section==='customers');
+  document.getElementById('nav-products').classList.toggle('active', section==='products');
+  if(section==='customers'){
+    showOverview();
+  } else {
+    currentProductId = null;
+    renderProductSidebar();
+    showProductOverview();
+  }
+}
+
+function renderProductSidebar(){
+  const q = document.getElementById('pb-search')?.value?.toLowerCase()||'';
+  const list = products.filter(p=>{
+    if(q && !p.name.toLowerCase().includes(q) && !(p.vendor||'').toLowerCase().includes(q)) return false;
+    return true;
+  }).sort((a,b)=> (a.vendor||'').localeCompare(b.vendor||'') || a.name.localeCompare(b.name));
+
+  document.getElementById('sidebar-customers').innerHTML = `
+    <div class="sidebar-header">
+      <input class="sidebar-search" id="pb-search" type="text" placeholder="搜尋產品或廠牌…" value="${q}" oninput="renderProductSidebar()">
+      <button class="btn btn-sm btn-primary" style="flex-shrink:0;padding:6px 10px;" onclick="openProductModal()" title="新增產品"><i class="ti ti-plus"></i></button>
+    </div>
+    <div class="sidebar-stats"><span>${products.length} 項產品</span></div>
+    <div class="sidebar-list">
+      ${list.length ? list.map(p=>productSidebarItemHTML(p)).join('') : `<div class="sidebar-empty">${products.length?'沒有符合的產品':'還沒有產品<br>點右上角「+」新增'}</div>`}
+    </div>
+  `;
+}
+function productSidebarItemHTML(p){
+  const col = avatarColor(p.vendor||p.name);
+  return `<div class="sidebar-item${currentProductId===p.id?' active':''}" onclick="openProduct(${p.id})">
+    <div class="avatar" style="background:${col[0]};color:${col[1]}">${(p.vendor||p.name).charAt(0)}</div>
+    <div class="sidebar-item-info">
+      <div class="sidebar-item-name">${p.name}</div>
+      <div class="sidebar-item-sub">${p.vendor?`${p.vendor}・`:''}${p.category||'未分類'}</div>
+    </div>
+  </div>`;
+}
+function showProductOverview(){
+  document.getElementById('main-panel').innerHTML = `
+    <div class="pipeline-header">
+      <div class="pipeline-title">產品目錄</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-primary" onclick="openProductModal()"><i class="ti ti-plus"></i> 新增產品</button>
+      </div>
+    </div>
+    ${products.length===0?`<div style="color:var(--text3);font-size:13px;margin-top:20px;">還沒有產品，點右上角「新增產品」開始建立你的產品目錄——之後 SI 培訓、報價、銷售分析都會用到這裡的資料。</div>`
+    :`<div style="color:var(--text3);font-size:13px;margin-top:20px;">從左側選擇一項產品查看詳情，或記錄最新的模組/功能更新。</div>`}
+  `;
+}
+function openProduct(id){
+  currentProductId = id;
+  renderProductSidebar();
+  renderProductDetail(id);
+}
+function renderProductDetail(id){
+  const p = products.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('main-panel').innerHTML = `
+    <div class="cust-page-header">
+      <button class="back-btn" onclick="switchSection('products')"><i class="ti ti-arrow-left"></i> 產品目錄</button>
+      <div>
+        <div class="cust-page-title">${p.name}</div>
+        <div class="cust-page-sub">${p.vendor?`廠牌：${p.vendor}`:''}${p.vendor&&p.category?'・':''}${p.category||''}</div>
+      </div>
+      <div class="cust-page-actions">
+        <button class="btn btn-sm" onclick="openProductModal(${id})"><i class="ti ti-pencil"></i> 編輯</button>
+        <button class="btn btn-sm" onclick="deleteProduct(${id})" style="color:var(--red)"><i class="ti ti-trash"></i></button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">產品說明</div>
+      <div style="padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.7;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);">
+        ${p.description ? p.description.replace(/\n/g,'<br>') : '<span style="color:var(--text3);">還沒填說明</span>'}
+        ${p.price?`<div style="margin-top:8px;font-weight:600;">參考單價：${p.price}</div>`:''}
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">最新模組／功能更新</div>
+      <div class="field-group">
+        ${(p.updates||[]).length===0?'<div style="padding:14px;color:var(--text3);font-size:13px;">還沒有更新記錄</div>':
+          (p.updates||[]).slice().sort((a,b)=>b.date.localeCompare(a.date)).map(u=>`
+          <div class="field-row" style="align-items:flex-start;">
+            <span class="field-label" style="flex-shrink:0;width:110px;">${u.date}</span>
+            <div style="flex:1;padding:10px 14px;font-size:13px;">${u.text}</div>
+          </div>`).join('')}
+      </div>
+      <div style="display:flex;gap:8px;margin-top:10px;">
+        <input class="field-input" id="pu-text" placeholder="記錄新的模組/功能更新…" style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;">
+        <button class="btn btn-sm btn-primary" style="flex-shrink:0;" onclick="addProductUpdate(${id})">記錄</button>
+      </div>
+    </div>
+  `;
+}
+function openProductModal(id=null){
+  editingProductId = id;
+  document.getElementById('product-modal-title').textContent = id ? '編輯產品' : '新增產品';
+  if(id){
+    const p = products.find(x=>x.id===id);
+    document.getElementById('p-name').value = p.name||'';
+    document.getElementById('p-vendor').value = p.vendor||'';
+    document.getElementById('p-category').value = p.category||'';
+    document.getElementById('p-price').value = p.price||'';
+    document.getElementById('p-description').value = p.description||'';
+  } else {
+    ['p-name','p-vendor','p-category','p-price','p-description'].forEach(i=>document.getElementById(i).value='');
+  }
+  document.getElementById('product-modal-bg').style.display = 'flex';
+}
+function closeProductModal(){ document.getElementById('product-modal-bg').style.display = 'none'; }
+let editingProductId = null;
+function saveProduct(){
+  const name = document.getElementById('p-name').value.trim();
+  if(!name){ document.getElementById('p-name').focus(); return; }
+  const data = {
+    name,
+    vendor: document.getElementById('p-vendor').value.trim(),
+    category: document.getElementById('p-category').value.trim(),
+    price: document.getElementById('p-price').value.trim(),
+    description: document.getElementById('p-description').value.trim(),
+  };
+  if(editingProductId){
+    Object.assign(products.find(x=>x.id===editingProductId), data);
+  } else {
+    products.unshift({id:nextProductId++, ...data, updates:[]});
+  }
+  saveProducts();
+  closeProductModal();
+  renderProductSidebar();
+  if(editingProductId) renderProductDetail(editingProductId);
+  showToast(editingProductId?'已更新產品資料':'✓ 新增產品成功');
+}
+function deleteProduct(id){
+  if(!confirm('確定要刪除這項產品嗎？此動作無法復原。')) return;
+  products = products.filter(p=>p.id!==id);
+  saveProducts();
+  currentProductId = null;
+  renderProductSidebar();
+  showProductOverview();
+}
+function addProductUpdate(id){
+  const input = document.getElementById('pu-text');
+  const text = input.value.trim();
+  if(!text) return;
+  const p = products.find(x=>x.id===id);
+  if(!p.updates) p.updates = [];
+  p.updates.unshift({id:Date.now(), date:TODAY, text});
+  saveProducts();
+  renderProductDetail(id);
+}
+
 function toggleSidebarGroup(status){
   sidebarCollapsed[status] = !sidebarCollapsed[status];
   renderSidebar();
@@ -2668,6 +2899,9 @@ function sidebarItemHTML(c){
 // ══════════════════════════════════════
 function showOverview(){
   currentCustomerId = null;
+  currentSection = 'customers';
+  document.getElementById('nav-customers')?.classList.add('active');
+  document.getElementById('nav-products')?.classList.remove('active');
   renderSidebar();
   renderOverview();
 }
