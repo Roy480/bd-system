@@ -1973,7 +1973,8 @@ function seedDemoData(){
     "nextMeeting": {
       "at": "2026-09-14T10:00",
       "note": "簽約後導入會議，確認上線時程"
-    }
+    },
+    "renewalDate": "2026-09-17"
   },
   {
     "id": 17,
@@ -2069,7 +2070,8 @@ function seedDemoData(){
       "amount": 1340000,
       "link": ""
     },
-    "siPartner": "博盛系統整合"
+    "siPartner": "博盛系統整合",
+    "renewalDate": "2027-03-15"
   },
   {
     "id": 18,
@@ -2152,7 +2154,7 @@ function seedDemoGoals(){
 }
 // 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
 // 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
-const DEMO_DATA_VERSION = 'v9-abc-quadrant-fix';
+const DEMO_DATA_VERSION = 'v10-renewal';
 // 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
 // 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
 // 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
@@ -2271,7 +2273,14 @@ function computeTodayReminders(){
     const diffDays = Math.ceil((new Date(c.nextMeeting.at) - new Date()) / 86400000);
     return diffDays <= 3 && diffDays >= 0;
   }).sort((a,b)=> new Date(a.nextMeeting.at) - new Date(b.nextMeeting.at));
-  return { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon };
+  // 續約提醒：訂閱制/有效期限的產品才會填續約日期，用 30 天前開始提醒，
+  // 因為續約通常需要提前跟客戶確認預算、走簽核流程，時間拉得比 PoC/會議這種短天期提醒更長
+  const needRenewal = customers.filter(c=>{
+    if(c.status!=='已簽約' || !c.renewalDate) return false;
+    const days = Math.ceil((new Date(c.renewalDate) - new Date(TODAY)) / 86400000);
+    return days <= 30;
+  }).sort((a,b)=> new Date(a.renewalDate) - new Date(b.renewalDate));
+  return { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon, needRenewal };
 }
 
 const needsMeetingNote = c => ['推進中','成交談判','已簽約'].includes(c.status) && !(c.nextMeeting && c.nextMeeting.at);
@@ -2326,9 +2335,14 @@ function quotePill(c){
 function invoicePill(c){
   return `<span class="reminder-pill" onclick="openCustomer(${c.id},'push')">${c.company||c.name||'（未命名）'}</span>`;
 }
+function renewalPill(c){
+  const days = Math.ceil((new Date(c.renewalDate) - new Date(TODAY)) / 86400000);
+  const note = days < 0 ? `<span style="color:var(--red);font-weight:400;">（已過期 ${-days} 天）</span>` : `<span style="color:var(--text3);font-weight:400;">（${days} 天後到期）</span>`;
+  return `<span class="reminder-pill" onclick="openCustomer(${c.id},'push')">${c.company||c.name||'（未命名）'}${note}</span>`;
+}
 
 function todayReminderHTML(){
-  const { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon } = computeTodayReminders();
+  const { needFollow, needCold, pocDue, needInvoice, needQuote, needDM, meetingSoon, needRenewal } = computeTodayReminders();
   const groups = [
     { icon:'🔴', label:'需要跟進', hint:'超過 7 天沒追蹤', items:needFollow, render:followPill },
     { icon:'🗓️', label:'會議提醒', hint:'即將到來的會面（3 天內）', items:meetingSoon, render:meetingPill },
@@ -2337,6 +2351,7 @@ function todayReminderHTML(){
     { icon:'🔵', label:'待報價', hint:'案子已進推進中以後，但還沒報價', items:needQuote, render:quotePill },
     { icon:'💰', label:'待開票', hint:'案子已簽約，發票還沒開', items:needInvoice, render:invoicePill },
     { icon:'👤', label:'決策者未接觸', hint:'案子還在推進，但還沒接觸到決策者', items:needDM, render:reminderPill },
+    { icon:'🔁', label:'續約到期', hint:'訂閱或授權快到期（30 天內），該提前跟客戶確認續約', items:needRenewal, render:renewalPill },
   ].filter(g => g.items.length>0);
 
   if(groups.length===0){
@@ -3096,7 +3111,9 @@ function contractPaymentHTML(c){
   <div class="sec">
     <div class="sec-title">合約 & 收款</div>
     <div class="field-group">
-      ${c.status==='已簽約'?`<div class="field-row"><span class="field-label">簽約日期</span><input class="field-input" type="date" value="${c.signedDate||''}" onchange="setField(${c.id},'signedDate',this.value)"></div>`:''}
+      ${c.status==='已簽約'?`<div class="field-row"><span class="field-label">簽約日期</span><input class="field-input" type="date" value="${c.signedDate||''}" onchange="setField(${c.id},'signedDate',this.value)"></div>
+      <div class="field-row"><span class="field-label">續約/展期日期</span><input class="field-input" type="date" value="${c.renewalDate||''}" onchange="setField(${c.id},'renewalDate',this.value)"></div>
+      <div class="field-hint" style="padding:0 14px 10px;">訂閱制或有效期限的產品才需要填，快到期時首頁會提醒</div>`:''}
       <div class="field-row"><span class="field-label">合約金額 NTD</span><input class="field-input" type="number" id="amt-${c.id}" value="${c.amount||''}" placeholder="0" onblur="saveAmount(${c.id})"></div>
     </div>
     ${c.amount?`
