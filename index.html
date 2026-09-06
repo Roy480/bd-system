@@ -454,6 +454,9 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
         <button class="nav-rail-btn" id="nav-products" onclick="switchSection('products')" title="產品目錄">
           <i class="ti ti-box"></i><span>產品</span>
         </button>
+        <button class="nav-rail-btn" id="nav-market" onclick="switchSection('market')" title="市場">
+          <i class="ti ti-world"></i><span>市場</span>
+        </button>
       </div>
       <div id="sidebar-customers" class="sidebar-customers"></div>
       <div id="main-panel" class="main-panel"></div>
@@ -499,6 +502,24 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
     <div class="modal-btns">
       <button class="btn-confirm" onclick="saveProduct()">儲存</button>
       <button class="btn-cancel-modal" onclick="closeProductModal()">取消</button>
+    </div>
+  </div>
+</div>
+
+<div id="market-modal-bg" class="modal-bg" style="display:none" onclick="if(event.target===this)closeMarketModal()">
+  <div class="modal">
+    <h3 id="market-modal-title">新增市場動態</h3>
+    <div class="field"><label>類型</label>
+      <select id="m-type"><option>新聞</option><option>展覽活動</option><option>重大事件</option></select>
+    </div>
+    <div class="field"><label>標題 *</label><input id="m-title" type="text" placeholder="例：Chrome 修補第 6 個零時差漏洞"></div>
+    <div class="field"><label>日期</label><input id="m-date" type="date"></div>
+    <div class="field"><label>來源</label><input id="m-source" type="text" placeholder="例：SecurityWeek／iThome資安週報"></div>
+    <div class="field"><label>摘要</label><textarea id="m-summary" rows="3" placeholder="用自己的話簡短摘要，不要整段複製貼上新聞內文（版權考量）"></textarea></div>
+    <div class="field"><label>原文連結（選填）</label><input id="m-link" type="text" placeholder="https://…"></div>
+    <div class="modal-btns">
+      <button class="btn-confirm" onclick="saveMarketItem()">儲存</button>
+      <button class="btn-cancel-modal" onclick="closeMarketModal()">取消</button>
     </div>
   </div>
 </div>
@@ -2212,7 +2233,48 @@ function seedDemoProducts(){
 }
 // 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
 // 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
-const DEMO_DATA_VERSION = 'v11-products';
+// 示範用市場動態：過去一週真實的資安新聞與台灣展覽活動，內容都已改寫成自己的摘要（版權考量），
+// 不是原文複製貼上。之後你自己維護時，也建議用這種「一兩句話講重點」的摘要方式記錄。
+function seedDemoMarket(){
+  const d = (offset) => { const dt = new Date(); dt.setDate(dt.getDate()+offset); return dt.toISOString().slice(0,10); };
+  return [
+    { id:1, type:'重大事件', title:'研究揭露：AI代理協助勒索軟體集團10小時內攻陷企業網路',
+      date:d(-2), source:'Palo Alto Networks Unit 42',
+      summary:'原本需要人工團隊約兩週才能完成的入侵流程，透過AI代理自動化偵察、橫向移動、竊取憑證，縮短到不到10小時完成。可以用這個案例跟客戶談「威脅速度已經超過人工應變能力」，帶出零信任/自動化防護的急迫性。',
+      link:'' },
+    { id:2, type:'新聞', title:'Chrome 修補 2026 年第 6 個零時差漏洞，已有實際攻擊案例',
+      date:d(-2), source:'SecurityWeek',
+      summary:'V8 引擎的沙箱逃逸漏洞，攻擊者只要誘導使用者瀏覽惡意頁面就能執行任意程式碼。凸顯瀏覽器層級防護與快速修補流程的重要性，跟端點防護／零信任類產品的銷售話術很好搭。',
+      link:'' },
+    { id:3, type:'新聞', title:'Thomson Reuters 傳出資料外洩，波及美加法院紀錄',
+      date:d(-2), source:'news4hackers',
+      summary:'涉及關鍵基礎設施等級的資料處理外洩案例，可以用來跟合規要求高的客戶（金融、法律、政府單位）談資料治理與存取控管的必要性。',
+      link:'' },
+    { id:4, type:'重大事件', title:'中國駭客組織APT24入侵台灣廣告供應鏈，波及知名新聞與小說網站',
+      date:d(-9), source:'iThome 資安週報',
+      summary:'攻擊者鎖定台灣廣告聯播網，向終端訪客投放惡意程式。台灣在地案例，適合跟本地客戶談供應鏈風險與第三方存取控管。',
+      link:'' },
+    { id:5, type:'新聞', title:'F5、Ping Identity 相繼推出 AI 代理資安防護新功能',
+      date:d(-2), source:'news4hackers',
+      summary:'F5 強化 WAF 的異常偵測與即時攔截能力；Ping Identity 則針對企業內部「個人 AI 代理」推出可視化與存取控管方案。反映 AI Agent 資安已經是各大廠 2026 下半年的主戰場，可以用來對談 IAM／零信任類產品時提出的市場趨勢佐證。',
+      link:'' },
+    { id:6, type:'展覽活動', title:'2026 CoreCloud Cyber Defense Lifecycle Forum',
+      date:'2026-09-17', source:'資安人科技網',
+      summary:'台灣在地資安論壇，主題涵蓋企業營運韌性、API零信任防禦。適合安排陌開或現有客戶邀約同行。',
+      link:'' },
+    { id:7, type:'展覽活動', title:'AI Agent × PQC 進行式：企業資安治理與攻防新挑戰',
+      date:'2026-10-13', source:'資安人科技網',
+      summary:'聚焦 AI 代理資安與後量子密碼（PQC）遷移兩大2026年焦點議題，跟你手上有 PQC/身分驗證相關產品線的客戶很對口。',
+      link:'' },
+    { id:8, type:'新聞', title:'資安院院長示警：AI資安威脅進入新階段，籲建立七道防線',
+      date:d(-6), source:'資安人科技網',
+      summary:'官方層級對AI資安威脅發出示警，是跟保守型客戶（政府、傳產）談「現在該investment的理由」時的有力佐證來源。',
+      link:'' },
+  ];
+}
+// 示範資料版本號：每次改動 seedDemoData()/seedDemoProducts()/seedDemoMarket() 的內容
+// 就要更新這個版本號，不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新內容。
+const DEMO_DATA_VERSION = 'v12-market';
 // 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
 // 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
 // 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
@@ -2228,6 +2290,9 @@ function ensureDemoDataFresh(){
     products = seedDemoProducts();
     nextProductId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
     saveProducts();
+    marketItems = seedDemoMarket();
+    nextMarketId = marketItems.length ? Math.max(...marketItems.map(m=>m.id))+1 : 1;
+    saveMarketItems();
     localStorage.setItem('bds_demo_version', DEMO_DATA_VERSION);
   }
 }
@@ -2245,6 +2310,8 @@ function toggleDemoMode(){
   goals = JSON.parse(localStorage.getItem(goalsKey())||'{}');
   products = JSON.parse(localStorage.getItem(productsKey())||'[]');
   nextProductId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
+  marketItems = JSON.parse(localStorage.getItem(marketKey())||'[]');
+  nextMarketId = marketItems.length ? Math.max(...marketItems.map(m=>m.id))+1 : 1;
   currentCustomerId = null;
   currentProductId = null;
   currentSection = 'customers';
@@ -2621,12 +2688,16 @@ function switchSection(section){
   currentSection = section;
   document.getElementById('nav-customers').classList.toggle('active', section==='customers');
   document.getElementById('nav-products').classList.toggle('active', section==='products');
+  document.getElementById('nav-market').classList.toggle('active', section==='market');
   if(section==='customers'){
     showOverview();
-  } else {
+  } else if(section==='products'){
     currentProductId = null;
     renderProductSidebar();
     showProductOverview();
+  } else if(section==='market'){
+    renderMarketSidebar();
+    renderMarketFeed();
   }
 }
 
@@ -2769,6 +2840,116 @@ function addProductUpdate(id){
   p.updates.unshift({id:Date.now(), date:TODAY, text});
   saveProducts();
   renderProductDetail(id);
+}
+
+// ══════════════════════════════════════
+// 市場（左側導覽第三個入口）
+// ══════════════════════════════════════
+// 這頁本質上是一份持續維護的清單，跟產品目錄的「最新模組更新」是同一種資料型態，
+// 差別只在於這裡是「你自己或Claude手動整理」的市場情報，不是系統自動抓的——
+// 這個工具沒有後端，沒辦法接新聞API自動更新，所以設計成跟產品目錄一樣的手動維護模式。
+function marketKey(){ return demoMode ? 'bds_demo_market_v1' : 'bds_market_v1'; }
+let marketItems = JSON.parse(localStorage.getItem(marketKey())||'[]');
+let nextMarketId = marketItems.length ? Math.max(...marketItems.map(m=>m.id))+1 : 1;
+let editingMarketId = null;
+const MARKET_TYPE_ICON = {'新聞':'📰','展覽活動':'📅','重大事件':'🚨'};
+function saveMarketItems(){ localStorage.setItem(marketKey(), JSON.stringify(marketItems)); }
+
+function renderMarketSidebar(){
+  const typeFilter = window._marketTypeFilter || '全部';
+  const types = ['全部','新聞','展覽活動','重大事件'];
+  document.getElementById('sidebar-customers').innerHTML = `
+    <div class="sidebar-header">
+      <div style="font-size:13px;font-weight:700;color:var(--text2);">市場動態</div>
+      <button class="btn btn-sm btn-primary" style="flex-shrink:0;padding:6px 10px;" onclick="openMarketModal()" title="新增"><i class="ti ti-plus"></i></button>
+    </div>
+    <div class="sidebar-stats"><span>${marketItems.length} 則紀錄</span></div>
+    <div style="padding:10px 14px;display:flex;flex-direction:column;gap:4px;">
+      ${types.map(t=>`<button class="btn btn-sm${typeFilter===t?' btn-primary':''}" style="text-align:left;justify-content:flex-start;" onclick="setMarketFilter('${t}')">${t}${t!=='全部'?` ${MARKET_TYPE_ICON[t]}`:''}</button>`).join('')}
+    </div>
+    <div style="padding:10px 14px;font-size:11px;color:var(--text3);line-height:1.6;border-top:1px solid var(--border2);margin-top:6px;">
+      這個系統沒有後端，沒辦法自動抓新聞。這裡的內容需要你自己（或請 Claude 幫忙搜尋整理後）手動更新，建議每週花 10 分鐘補一次。
+    </div>
+  `;
+}
+function setMarketFilter(t){ window._marketTypeFilter = t; renderMarketSidebar(); renderMarketFeed(); }
+function renderMarketFeed(){
+  const typeFilter = window._marketTypeFilter || '全部';
+  const list = marketItems
+    .filter(m=> typeFilter==='全部' || m.type===typeFilter)
+    .sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+  document.getElementById('main-panel').innerHTML = `
+    <div class="pipeline-header">
+      <div class="pipeline-title">市場動態${typeFilter!=='全部'?`｜${typeFilter}`:''}</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-sm btn-primary" onclick="openMarketModal()"><i class="ti ti-plus"></i> 新增動態</button>
+      </div>
+    </div>
+    ${list.length===0?`<div style="color:var(--text3);font-size:13px;margin-top:20px;">還沒有市場動態紀錄，點右上角「新增動態」開始整理。</div>`:
+    list.map(m=>`
+      <div class="goals-card">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:16px;">${MARKET_TYPE_ICON[m.type]||'📰'}</span>
+            <span style="font-weight:700;font-size:14px;">${m.title}</span>
+          </div>
+          <div style="display:flex;gap:6px;flex-shrink:0;">
+            <button style="background:none;border:none;cursor:pointer;color:var(--text3);" onclick="openMarketModal(${m.id})" title="編輯"><i class="ti ti-pencil"></i></button>
+            <button style="background:none;border:none;cursor:pointer;color:var(--text3);" onclick="deleteMarketItem(${m.id})" title="刪除"><i class="ti ti-trash"></i></button>
+          </div>
+        </div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;">${m.date||''}${m.date&&m.source?'・':''}${m.source||''}</div>
+        ${m.summary?`<div style="font-size:13px;color:var(--text2);margin-top:8px;line-height:1.6;">${m.summary}</div>`:''}
+        ${m.link?`<a href="${m.link}" target="_blank" rel="noopener" style="font-size:12px;color:var(--primary);margin-top:6px;display:inline-block;">原文連結 →</a>`:''}
+      </div>
+    `).join('')}
+  `;
+}
+function openMarketModal(id=null){
+  editingMarketId = id;
+  document.getElementById('market-modal-title').textContent = id ? '編輯市場動態' : '新增市場動態';
+  if(id){
+    const m = marketItems.find(x=>x.id===id);
+    document.getElementById('m-type').value = m.type||'新聞';
+    document.getElementById('m-title').value = m.title||'';
+    document.getElementById('m-date').value = m.date||'';
+    document.getElementById('m-source').value = m.source||'';
+    document.getElementById('m-summary').value = m.summary||'';
+    document.getElementById('m-link').value = m.link||'';
+  } else {
+    document.getElementById('m-type').value = '新聞';
+    ['m-title','m-date','m-source','m-summary','m-link'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('m-date').value = TODAY;
+  }
+  document.getElementById('market-modal-bg').style.display = 'flex';
+}
+function closeMarketModal(){ document.getElementById('market-modal-bg').style.display = 'none'; }
+function saveMarketItem(){
+  const title = document.getElementById('m-title').value.trim();
+  if(!title){ document.getElementById('m-title').focus(); return; }
+  const data = {
+    type: document.getElementById('m-type').value,
+    title,
+    date: document.getElementById('m-date').value,
+    source: document.getElementById('m-source').value.trim(),
+    summary: document.getElementById('m-summary').value.trim(),
+    link: document.getElementById('m-link').value.trim(),
+  };
+  if(editingMarketId){
+    Object.assign(marketItems.find(x=>x.id===editingMarketId), data);
+  } else {
+    marketItems.unshift({id:nextMarketId++, ...data});
+  }
+  saveMarketItems();
+  closeMarketModal();
+  renderMarketFeed();
+  showToast(editingMarketId?'已更新':'✓ 新增成功');
+}
+function deleteMarketItem(id){
+  if(!confirm('確定要刪除這則市場動態嗎？')) return;
+  marketItems = marketItems.filter(m=>m.id!==id);
+  saveMarketItems();
+  renderMarketFeed();
 }
 
 function toggleSidebarGroup(status){
