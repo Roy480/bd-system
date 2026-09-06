@@ -2204,35 +2204,164 @@ function seedDemoGoals(){
 }
 // 示範用產品目錄：涵蓋幾條常見資安產品線，供示範「產品目錄」跟之後的「產品銷售佔比」使用
 function seedDemoProducts(){
-  const d = (offset) => { const dt = new Date(); dt.setDate(dt.getDate()+offset); return dt.toISOString().slice(0,10); };
   return [
-    { id:1, name:'Okta Identity Cloud', vendor:'Okta', category:'身分驗證 IAM', price:'依使用者數計價，年約制',
-      description:'單一登入＋多因子驗證，適合員工人數 200 人以上、有多套雲端系統要整合登入的企業。',
-      updates:[
-        { id:101, date:d(-10), text:'新增台灣本地客服窗口，教育訓練材料補齊中文版' },
-        { id:102, date:d(-40), text:'新版支援 Passkey 免密碼登入' },
-      ] },
-    { id:2, name:'Akamai Guardicore', vendor:'Akamai', category:'零信任 / 微分段', price:'依保護節點數計價',
-      description:'資料中心與雲端環境的微分段方案，適合金融、醫療等高合規要求產業。',
-      updates:[ { id:103, date:d(-20), text:'新增台灣資料中心節點，延遲降低' } ] },
-    { id:3, name:'Citrix DaaS', vendor:'Citrix', category:'虛擬桌面 VDI', price:'依授權數計價，年約制',
-      description:'雲端虛擬桌面服務，適合混合辦公、需要集中管控端點資料的企業。',
-      updates:[] },
-    { id:4, name:'TXOne Edge', vendor:'TXOne Networks', category:'OT／工控資安', price:'依產線設備數報價',
-      description:'工控網路資安防護，鎖定製造業產線設備，OT/IT 網路區隔為核心賣點。',
-      updates:[
-        { id:104, date:d(-5), text:'新模組支援舊型 PLC 設備的流量分析' },
-      ] },
-    { id:5, name:'Gurucul UEBA', vendor:'Gurucul', category:'使用者行為分析', price:'依資料量計價，年約制',
-      description:'用戶與實體行為分析，用機器學習偵測異常存取行為，適合已有 SIEM 但誤報率過高的客戶。',
-      updates:[] },
-    { id:6, name:'Datadog Cloud SIEM', vendor:'Datadog', category:'雲端監控 / SIEM', price:'依資料量與主機數計價',
-      description:'雲端原生的監控與資安事件管理平台，適合已經全面上雲、開發團隊主導採購決策的企業。',
-      updates:[ { id:105, date:d(-15), text:'新增台幣報價方案，簡化採購流程' } ] },
+    {
+      "id": 1,
+      "name": "Okta Identity Cloud",
+      "vendor": "Okta",
+      "category": "身分驗證 IAM",
+      "price": "依使用者數計價，年約制；200人以下約NT$40-60萬/年，200人以上另議",
+      "description": "單一登入(SSO)＋多因子驗證(MFA)雲端身分平台。核心賣點是「一次登入、全公司系統通行」，同時把離職斷權、密碼原則統一管理，大幅降低IT行政負擔跟帳號外洩風險。市場上跟微軟Entra ID、Ping Identity同一個賽道，Okta的優勢是跨雲整合廣、第三方系統串接數量最多（超過7000個現成整合）。",
+      "fitProfile": "適合：員工200人以上、用超過5套雲端系統（Google Workspace/Salesforce/SAP等）、IT團隊常常在處理「忘記密碼」跟「離職忘了關帳號」這種瑣事的公司。不適合：全公司只用1-2套系統、或還在用地端系統為主的傳產（先解決地端問題比較急迫）。銷售角度：先問「你們IT一個月花多少時間在處理密碼/權限問題」，量化痛點再帶入方案。",
+      "files": [
+        {
+          "id": "ref1",
+          "name": "Okta Identity Cloud_快速參考卡.txt",
+          "size": 1059,
+          "type": "text/plain",
+          "dataUrl": "data:text/plain;charset=utf-8;base64,T2t0YSBJZGVudGl0eSBDbG91ZCDlv6vpgJ/lj4PogIPljaEK5bug54mM77yaT2t0YeOAgHzjgIDliIbpoZ7vvJrouqvliIbpqZforYkgSUFNCgrjgJDlip/og73ntLDnr4DjgJEK5Zau5LiA55m75YWlKFNTTynvvIvlpJrlm6DlrZDpqZforYkoTUZBKembsuerr+i6q+WIhuW5s+WPsOOAguaguOW/g+izo+m7nuaYr+OAjOS4gOasoeeZu+WFpeOAgeWFqOWFrOWPuOezu+e1semAmuihjOOAje+8jOWQjOaZguaKiumbouiBt+aWt+asiuOAgeWvhueivOWOn+WJh+e1seS4gOeuoeeQhu+8jOWkp+W5hemZjeS9jklU6KGM5pS/6LKg5pOU6Lef5biz6Jmf5aSW5rSp6aKo6Zqq44CC5biC5aC05LiK6Lef5b6u6LufRW50cmEgSUTjgIFQaW5nIElkZW50aXR55ZCM5LiA5YCL6LO96YGT77yMT2t0YeeahOWEquWLouaYr+i3qOmbsuaVtOWQiOW7o+OAgeesrOS4ieaWueezu+e1seS4suaOpeaVuOmHj+acgOWkmu+8iOi2hemBjjcwMDDlgIvnj77miJDmlbTlkIjvvInjgIIKCuOAkOWPg+iAg+WWruWDueOAkQrkvp3kvb/nlKjogIXmlbjoqIjlg7nvvIzlubTntITliLbvvJsyMDDkurrku6XkuIvntIROVCQ0MC02MOiQrC/lubTvvIwyMDDkurrku6XkuIrlj6borbAKCuOAkOmBqeWQiOeahOWuouaItuePvuazgeOAkQrpganlkIjvvJrlk6Hlt6UyMDDkurrku6XkuIrjgIHnlKjotoXpgY415aWX6Zuy56uv57O757Wx77yIR29vZ2xlIFdvcmtzcGFjZS9TYWxlc2ZvcmNlL1NBUOetie+8ieOAgUlU5ZyY6ZqK5bi45bi45Zyo6JmV55CG44CM5b+Y6KiY5a+G56K844CN6Lef44CM6Zui6IG35b+Y5LqG6Zec5biz6Jmf44CN6YCZ56iu55Gj5LqL55qE5YWs5Y+444CC5LiN6YGp5ZCI77ya5YWo5YWs5Y+45Y+q55SoMS0y5aWX57O757Wx44CB5oiW6YKE5Zyo55So5Zyw56uv57O757Wx54K65Li755qE5YKz55Si77yI5YWI6Kej5rG65Zyw56uv5ZWP6aGM5q+U6LyD5oCl6L+r77yJ44CC6Yq35ZSu6KeS5bqm77ya5YWI5ZWP44CM5L2g5YCRSVTkuIDlgIvmnIjoirHlpJrlsJHmmYLplpPlnKjomZXnkIblr4bnorwv5qyK6ZmQ5ZWP6aGM44CN77yM6YeP5YyW55eb6bue5YaN5bi25YWl5pa55qGI44CC",
+          "uploadedAt": "2026-09-06"
+        }
+      ],
+      "updates": [
+        {
+          "id": 101,
+          "date": "2026-08-27",
+          "text": "新增台灣本地客服窗口，教育訓練材料補齊中文版"
+        },
+        {
+          "id": 102,
+          "date": "2026-07-28",
+          "text": "新版支援 Passkey 免密碼登入"
+        }
+      ],
+      "docLink": ""
+    },
+    {
+      "id": 2,
+      "name": "Akamai Guardicore",
+      "vendor": "Akamai",
+      "category": "零信任 / 微分段",
+      "price": "依保護節點數計價，年約制；100節點以下約NT$150-200萬/年",
+      "description": "資料中心與雲端環境的微分段(microsegmentation)方案。核心邏輯是「就算駭客進了你的網路，也只能困在一個小房間，出不去」——把扁平的內部網路切成很多獨立區塊，攻擊者橫向移動時會被立刻攔截跟示警。",
+      "fitProfile": "適合：金融、醫療等高合規要求產業；資料中心/機房內部系統彼此高度互聯、一旦被入侵損失巨大的客戶；曾經發生過內部橫向擴散攻擊事件的客戶（有切身之痛，銷售最好推）。不適合：規模很小、機房系統很單純（不到10台伺服器）的客戶，投報率不高。銷售角度：用「勒索軟體攻陷一台就等於攻陷全部」這個情境切入，搭配市場動態頁最近的AI勒索軟體案例。",
+      "files": [
+        {
+          "id": "ref2",
+          "name": "Akamai Guardicore_快速參考卡.txt",
+          "size": 991,
+          "type": "text/plain",
+          "dataUrl": "data:text/plain;charset=utf-8;base64,QWthbWFpIEd1YXJkaWNvcmUg5b+r6YCf5Y+D6ICD5Y2hCuW7oOeJjO+8mkFrYW1haeOAgHzjgIDliIbpoZ7vvJrpm7bkv6Hku7sgLyDlvq7liIbmrrUKCuOAkOWKn+iDvee0sOevgOOAkQros4fmlpnkuK3lv4PoiIfpm7Lnq6/nkrDlooPnmoTlvq7liIbmrrUobWljcm9zZWdtZW50YXRpb24p5pa55qGI44CC5qC45b+D6YKP6Lyv5piv44CM5bCx566X6aet5a6i6YCy5LqG5L2g55qE57ay6Lev77yM5Lmf5Y+q6IO95Zuw5Zyo5LiA5YCL5bCP5oi/6ZaT77yM5Ye65LiN5Y6744CN4oCU4oCU5oqK5omB5bmz55qE5YWn6YOo57ay6Lev5YiH5oiQ5b6I5aSa542o56uL5Y2A5aGK77yM5pS75pOK6ICF5qmr5ZCR56e75YuV5pmC5pyD6KKr56uL5Yi75pSU5oiq6Lef56S66K2m44CCCgrjgJDlj4PogIPllq7lg7njgJEK5L6d5L+d6K2356+A6bue5pW46KiI5YO577yM5bm057SE5Yi277ybMTAw56+A6bue5Lul5LiL57SETlQkMTUwLTIwMOiQrC/lubQKCuOAkOmBqeWQiOeahOWuouaItuePvuazgeOAkQrpganlkIjvvJrph5Hono3jgIHphqvnmYLnrYnpq5jlkIjopo/opoHmsYLnlKLmpa3vvJvos4fmlpnkuK3lv4Mv5qmf5oi/5YWn6YOo57O757Wx5b285q2k6auY5bqm5LqS6IGv44CB5LiA5pem6KKr5YWl5L615pCN5aSx5beo5aSn55qE5a6i5oi277yb5pu+57aT55m855Sf6YGO5YWn6YOo5qmr5ZCR5pO05pWj5pS75pOK5LqL5Lu255qE5a6i5oi277yI5pyJ5YiH6Lqr5LmL55eb77yM6Yq35ZSu5pyA5aW95o6o77yJ44CC5LiN6YGp5ZCI77ya6KaP5qih5b6I5bCP44CB5qmf5oi/57O757Wx5b6I5Zau57SU77yI5LiN5YiwMTDlj7DkvLrmnI3lmajvvInnmoTlrqLmiLbvvIzmipXloLHnjofkuI3pq5jjgILpirfllK7op5LluqbvvJrnlKjjgIzli5LntKLou5/pq5TmlLvpmbfkuIDlj7DlsLHnrYnmlrzmlLvpmbflhajpg6jjgI3pgJnlgIvmg4XlooPliIflhaXvvIzmkK3phY3luILloLTli5XmhYvpoIHmnIDov5HnmoRBSeWLkue0oui7n+mrlOahiOS+i+OAgg==",
+          "uploadedAt": "2026-09-06"
+        }
+      ],
+      "updates": [
+        {
+          "id": 103,
+          "date": "2026-08-17",
+          "text": "新增台灣資料中心節點，延遲降低"
+        }
+      ],
+      "docLink": ""
+    },
+    {
+      "id": 3,
+      "name": "Citrix DaaS",
+      "vendor": "Citrix",
+      "category": "虛擬桌面 VDI",
+      "price": "依授權數計價，年約制；每使用者約NT$3,000-5,000/年",
+      "description": "雲端虛擬桌面服務(Desktop-as-a-Service)。員工不管在哪台電腦、哪個地點登入，都能看到一模一樣的桌面環境跟資料，資料實際上留在雲端沒有下載到本機，適合需要嚴格控管資料外流風險的產業。",
+      "fitProfile": "適合：混合辦公比例高（員工常在外面/在家工作）、需要集中控管端點資料（例如客服中心、財會部門不能讓資料流出）、或是IT設備汰換週期長想延長舊電腦壽命的客戶。不適合：全員固定進公司上班、對延遲敏感的工作型態（例如影音剪輯、CAD繪圖為主的團隊，VDI體驗會打折扣）。銷售角度：用「舊電腦不用汰換，資料也不會外流」雙重誘因切入IT預算有限的客戶。",
+      "files": [
+        {
+          "id": "ref3",
+          "name": "Citrix DaaS_快速參考卡.txt",
+          "size": 960,
+          "type": "text/plain",
+          "dataUrl": "data:text/plain;charset=utf-8;base64,Q2l0cml4IERhYVMg5b+r6YCf5Y+D6ICD5Y2hCuW7oOeJjO+8mkNpdHJpeOOAgHzjgIDliIbpoZ7vvJromZvmk6zmoYzpnaIgVkRJCgrjgJDlip/og73ntLDnr4DjgJEK6Zuy56uv6Jmb5pOs5qGM6Z2i5pyN5YuZKERlc2t0b3AtYXMtYS1TZXJ2aWNlKeOAguWToeW3peS4jeeuoeWcqOWTquWPsOmbu+iFpuOAgeWTquWAi+WcsOm7nueZu+WFpe+8jOmDveiDveeci+WIsOS4gOaooeS4gOaoo+eahOahjOmdoueSsOWig+i3n+izh+aWme+8jOizh+aWmeWvpumam+S4iueVmeWcqOmbsuerr+aykuacieS4i+i8ieWIsOacrOapn++8jOmBqeWQiOmcgOimgeWatOagvOaOp+euoeizh+aWmeWklua1gemiqOmaqueahOeUoualreOAggoK44CQ5Y+D6ICD5Zau5YO544CRCuS+neaOiOasiuaVuOioiOWDue+8jOW5tOe0hOWItu+8m+avj+S9v+eUqOiAhee0hE5UJDMsMDAwLTUsMDAwL+W5tAoK44CQ6YGp5ZCI55qE5a6i5oi254++5rOB44CRCumBqeWQiO+8mua3t+WQiOi+puWFrOavlOS+i+mrmO+8iOWToeW3peW4uOWcqOWklumdoi/lnKjlrrblt6XkvZzvvInjgIHpnIDopoHpm4bkuK3mjqfnrqHnq6/pu57os4fmlpnvvIjkvovlpoLlrqLmnI3kuK3lv4PjgIHosqHmnIPpg6jploDkuI3og73orpPos4fmlpnmtYHlh7rvvInjgIHmiJbmmK9JVOioreWCmeaxsOaPm+mAseacn+mVt+aDs+W7tumVt+iIiumbu+iFpuWjveWRveeahOWuouaItuOAguS4jemBqeWQiO+8muWFqOWToeWbuuWumumAsuWFrOWPuOS4iuePreOAgeWwjeW7tumBsuaVj+aEn+eahOW3peS9nOWei+aFi++8iOS+i+WmguW9semfs+WJqui8r+OAgUNBROe5quWclueCuuS4u+eahOWcmOmaiu+8jFZESemrlOmpl+acg+aJk+aKmOaJo++8ieOAgumKt+WUruinkuW6pu+8mueUqOOAjOiIiumbu+iFpuS4jeeUqOaxsOaPm++8jOizh+aWmeS5n+S4jeacg+Wklua1geOAjembmemHjeiqmOWboOWIh+WFpUlU6aCQ566X5pyJ6ZmQ55qE5a6i5oi244CC",
+          "uploadedAt": "2026-09-06"
+        }
+      ],
+      "updates": [],
+      "docLink": ""
+    },
+    {
+      "id": 4,
+      "name": "TXOne Edge",
+      "vendor": "TXOne Networks",
+      "category": "OT／工控資安",
+      "price": "依產線設備數報價，通常以「每條產線」為報價單位，NT$80-150萬/產線起",
+      "description": "工控網路資安防護，鎖定製造業產線設備。核心賣點是OT（維運技術，如PLC、SCADA）跟IT網路的區隔——很多工廠的產線設備跟辦公室網路是連在一起的，只要辦公室電腦中毒，整條產線可能停擺。TXOne新模組支援連舊型PLC設備的流量分析，不用汰換老舊設備就能上防護。",
+      "fitProfile": "適合：製造業，特別是有產線自動化設備、設備使用年限長（很多10年以上的老PLC還在用）、曾經因為資安事件導致產線停機過的客戶。不適合：純軟體/服務業，沒有實體產線設備。銷售角度：這是你們家最獨特的產品線，市場上真正懂OT資安的廠商不多，可以主打「不用換舊設備就能防護」這個差異化。",
+      "files": [
+        {
+          "id": "ref4",
+          "name": "TXOne Edge_快速參考卡.txt",
+          "size": 1009,
+          "type": "text/plain",
+          "dataUrl": "data:text/plain;charset=utf-8;base64,VFhPbmUgRWRnZSDlv6vpgJ/lj4PogIPljaEK5bug54mM77yaVFhPbmUgTmV0d29ya3PjgIB844CA5YiG6aGe77yaT1TvvI/lt6Xmjqfos4flrokKCuOAkOWKn+iDvee0sOevgOOAkQrlt6XmjqfntrLot6/os4flronpmLLorbfvvIzpjpblrproo73pgKDmpa3nlKLnt5roqK3lgpnjgILmoLjlv4Pos6Ppu57mmK9PVO+8iOe2remBi+aKgOihk++8jOWmglBMQ+OAgVNDQURB77yJ6LefSVTntrLot6/nmoTljYDpmpTigJTigJTlvojlpJrlt6Xlu6DnmoTnlKLnt5roqK3lgpnot5/ovqblhazlrqTntrLot6/mmK/pgKPlnKjkuIDotbfnmoTvvIzlj6ropoHovqblhazlrqTpm7vohabkuK3mr5LvvIzmlbTmop3nlKLnt5rlj6/og73lgZzmk7rjgIJUWE9uZeaWsOaooee1hOaUr+aPtOmAo+iIiuWei1BMQ+ioreWCmeeahOa1gemHj+WIhuaekO+8jOS4jeeUqOaxsOaPm+iAgeiIiuioreWCmeWwseiDveS4iumYsuitt+OAggoK44CQ5Y+D6ICD5Zau5YO544CRCuS+neeUoue3muioreWCmeaVuOWgseWDue+8jOmAmuW4uOS7peOAjOavj+aineeUoue3muOAjeeCuuWgseWDueWWruS9je+8jE5UJDgwLTE1MOiQrC/nlKLnt5rotbcKCuOAkOmBqeWQiOeahOWuouaItuePvuazgeOAkQrpganlkIjvvJroo73pgKDmpa3vvIznibnliKXmmK/mnInnlKLnt5roh6rli5XljJboqK3lgpnjgIHoqK3lgpnkvb/nlKjlubTpmZDplbfvvIjlvojlpJoxMOW5tOS7peS4iueahOiAgVBMQ+mChOWcqOeUqO+8ieOAgeabvue2k+WboOeCuuizh+WuieS6i+S7tuWwjuiHtOeUoue3muWBnOapn+mBjueahOWuouaItuOAguS4jemBqeWQiO+8mue0lOi7n+mrlC/mnI3li5nmpa3vvIzmspLmnInlr6bpq5TnlKLnt5roqK3lgpnjgILpirfllK7op5LluqbvvJrpgJnmmK/kvaDlgJHlrrbmnIDnjajnibnnmoTnlKLlk4Hnt5rvvIzluILloLTkuIrnnJ/mraPmh4JPVOizh+WuieeahOW7oOWVhuS4jeWkmu+8jOWPr+S7peS4u+aJk+OAjOS4jeeUqOaPm+iIiuioreWCmeWwseiDvemYsuitt+OAjemAmeWAi+W3rueVsOWMluOAgg==",
+          "uploadedAt": "2026-09-06"
+        }
+      ],
+      "updates": [
+        {
+          "id": 104,
+          "date": "2026-09-01",
+          "text": "新模組支援舊型 PLC 設備的流量分析"
+        }
+      ],
+      "docLink": ""
+    },
+    {
+      "id": 5,
+      "name": "Gurucul UEBA",
+      "vendor": "Gurucul",
+      "category": "使用者行為分析",
+      "price": "依資料量計價，年約制，通常搭配既有SIEM做加值銷售",
+      "description": "用戶與實體行為分析(UEBA)，用機器學習建立每個帳號的「正常行為基準」，一旦偵測到異常（例如半夜登入、下載異常大量檔案）就示警。核心價值是解決「誤報太多，資安人員疲於奔命」這個SIEM系統的通病。",
+      "fitProfile": "適合：已經有SIEM系統、但抱怨誤報太多、資安團隊人力吃緊的客戶；內部帳號權限複雜、擔心「內鬼」或帳號被盜用的金融/科技業。不適合：還沒有基礎SIEM系統的客戶（UEBA是加值層，不是地基）。銷售角度：先確認客戶現有SIEM廠牌跟誤報困擾，用「減少90%無效警示」這個角度切入，是很好的續售/加購產品，不適合當第一次陌開的主推項目。",
+      "files": [
+        {
+          "id": "ref5",
+          "name": "Gurucul UEBA_快速參考卡.txt",
+          "size": 957,
+          "type": "text/plain",
+          "dataUrl": "data:text/plain;charset=utf-8;base64,R3VydWN1bCBVRUJBIOW/q+mAn+WPg+iAg+WNoQrlu6DniYzvvJpHdXJ1Y3Vs44CAfOOAgOWIhumhnu+8muS9v+eUqOiAheihjOeCuuWIhuaekAoK44CQ5Yqf6IO957Sw56+A44CRCueUqOaItuiIh+WvpumrlOihjOeCuuWIhuaekChVRUJBKe+8jOeUqOapn+WZqOWtuOe/kuW7uueri+avj+WAi+W4s+iZn+eahOOAjOato+W4uOihjOeCuuWfuua6luOAje+8jOS4gOaXpuWBtea4rOWIsOeVsOW4uO+8iOS+i+WmguWNiuWknOeZu+WFpeOAgeS4i+i8ieeVsOW4uOWkp+mHj+aqlOahiO+8ieWwseekuuitpuOAguaguOW/g+WDueWAvOaYr+ino+axuuOAjOiqpOWgseWkquWkmu+8jOizh+WuieS6uuWToeeWsuaWvOWllOWRveOAjemAmeWAi1NJRU3ns7vntbHnmoTpgJrnl4XjgIIKCuOAkOWPg+iAg+WWruWDueOAkQrkvp3os4fmlpnph4/oqIjlg7nvvIzlubTntITliLbvvIzpgJrluLjmkK3phY3ml6LmnIlTSUVN5YGa5Yqg5YC86Yq35ZSuCgrjgJDpganlkIjnmoTlrqLmiLbnj77ms4HjgJEK6YGp5ZCI77ya5bey57aT5pyJU0lFTeezu+e1seOAgeS9huaKseaAqOiqpOWgseWkquWkmuOAgeizh+WuieWcmOmaiuS6uuWKm+WQg+e3iueahOWuouaItu+8m+WFp+mDqOW4s+iZn+asiumZkOikh+mbnOOAgeaTlOW/g+OAjOWFp+msvOOAjeaIluW4s+iZn+iiq+ebnOeUqOeahOmHkeiejS/np5HmioDmpa3jgILkuI3pganlkIjvvJrpgoTmspLmnInln7rnpI5TSUVN57O757Wx55qE5a6i5oi277yIVUVCQeaYr+WKoOWAvOWxpO+8jOS4jeaYr+WcsOWfuu+8ieOAgumKt+WUruinkuW6pu+8muWFiOeiuuiqjeWuouaItuePvuaciVNJRU3lu6DniYzot5/oqqTloLHlm7Dmk77vvIznlKjjgIzmuJvlsJE5MCXnhKHmlYjorabnpLrjgI3pgJnlgIvop5LluqbliIflhaXvvIzmmK/lvojlpb3nmoTnuozllK4v5Yqg6LO855Si5ZOB77yM5LiN6YGp5ZCI55W256ys5LiA5qyh6ZmM6ZaL55qE5Li75o6o6aCF55uu44CC",
+          "uploadedAt": "2026-09-06"
+        }
+      ],
+      "updates": [],
+      "docLink": ""
+    },
+    {
+      "id": 6,
+      "name": "Datadog Cloud SIEM",
+      "vendor": "Datadog",
+      "category": "雲端監控 / SIEM",
+      "price": "依資料量與主機數計價，用量制，中型團隊約NT$50-100萬/年",
+      "description": "雲端原生的監控與資安事件管理平台，把應用程式效能監控(APM)、日誌管理、資安事件監控整合在同一個平台。開發團隊通常已經在用Datadog做效能監控，資安模組是很自然的加購延伸。",
+      "fitProfile": "適合：已經全面上雲（AWS/GCP/Azure）、開發團隊主導或高度參與採購決策、原本就有在用Datadog做APM監控的客戶。不適合：地端系統為主、決策者是傳統IT部門而非開發團隊主導的組織（溝通語言跟採購邏輯不同）。銷售角度：先確認客戶是不是已經在用Datadog其他模組，如果是，這是幾乎零阻力的加購銷售；如果完全沒用過，要先從APM切入建立信任，不要一開始就談資安模組。",
+      "files": [
+        {
+          "id": "ref6",
+          "name": "Datadog Cloud SIEM_快速參考卡.txt",
+          "size": 974,
+          "type": "text/plain",
+          "dataUrl": "data:text/plain;charset=utf-8;base64,RGF0YWRvZyBDbG91ZCBTSUVNIOW/q+mAn+WPg+iAg+WNoQrlu6DniYzvvJpEYXRhZG9n44CAfOOAgOWIhumhnu+8mumbsuerr+ebo+aOpyAvIFNJRU0KCuOAkOWKn+iDvee0sOevgOOAkQrpm7Lnq6/ljp/nlJ/nmoTnm6PmjqfoiIfos4flronkuovku7bnrqHnkIblubPlj7DvvIzmiormh4nnlKjnqIvlvI/mlYjog73nm6PmjqcoQVBNKeOAgeaXpeiqjOeuoeeQhuOAgeizh+WuieS6i+S7tuebo+aOp+aVtOWQiOWcqOWQjOS4gOWAi+W5s+WPsOOAgumWi+eZvOWcmOmaiumAmuW4uOW3sue2k+WcqOeUqERhdGFkb2flgZrmlYjog73nm6PmjqfvvIzos4flronmqKHntYTmmK/lvojoh6rnhLbnmoTliqDos7zlu7bkvLjjgIIKCuOAkOWPg+iAg+WWruWDueOAkQrkvp3os4fmlpnph4/oiIfkuLvmqZ/mlbjoqIjlg7nvvIznlKjph4/liLbvvIzkuK3lnovlnJjpmorntIROVCQ1MC0xMDDokKwv5bm0CgrjgJDpganlkIjnmoTlrqLmiLbnj77ms4HjgJEK6YGp5ZCI77ya5bey57aT5YWo6Z2i5LiK6Zuy77yIQVdTL0dDUC9BenVyZe+8ieOAgemWi+eZvOWcmOmaiuS4u+WwjuaIlumrmOW6puWPg+iIh+aOoeizvOaxuuetluOAgeWOn+acrOWwseacieWcqOeUqERhdGFkb2flgZpBUE3nm6PmjqfnmoTlrqLmiLbjgILkuI3pganlkIjvvJrlnLDnq6/ns7vntbHngrrkuLvjgIHmsbrnrZbogIXmmK/lgrPntbFJVOmDqOmWgOiAjOmdnumWi+eZvOWcmOmaiuS4u+WwjueahOe1hOe5lO+8iOa6nemAmuiqnuiogOi3n+aOoeizvOmCj+i8r+S4jeWQjO+8ieOAgumKt+WUruinkuW6pu+8muWFiOeiuuiqjeWuouaItuaYr+S4jeaYr+W3sue2k+WcqOeUqERhdGFkb2flhbbku5bmqKHntYTvvIzlpoLmnpzmmK/vvIzpgJnmmK/lub7kuY7pm7bpmLvlipvnmoTliqDos7zpirfllK7vvJvlpoLmnpzlrozlhajmspLnlKjpgY7vvIzopoHlhYjlvp5BUE3liIflhaXlu7rnq4vkv6Hku7vvvIzkuI3opoHkuIDplovlp4vlsLHoq4fos4flronmqKHntYTjgII=",
+          "uploadedAt": "2026-09-06"
+        }
+      ],
+      "updates": [
+        {
+          "id": 105,
+          "date": "2026-08-22",
+          "text": "新增台幣報價方案，簡化採購流程"
+        }
+      ],
+      "docLink": ""
+    }
   ];
 }
-// 示範資料版本號：每次改動 seedDemoData() 的內容就要更新這個版本號，
-// 不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新欄位（例如這次新增的 siPartner）
 // 示範用市場動態：過去一週真實的資安新聞與台灣展覽活動，內容都已改寫成自己的摘要（版權考量），
 // 不是原文複製貼上。之後你自己維護時，也建議用這種「一兩句話講重點」的摘要方式記錄。
 function seedDemoMarket(){
@@ -2274,7 +2403,7 @@ function seedDemoMarket(){
 }
 // 示範資料版本號：每次改動 seedDemoData()/seedDemoProducts()/seedDemoMarket() 的內容
 // 就要更新這個版本號，不然瀏覽器裡舊版的示範資料會一直被沿用，看不到最新內容。
-const DEMO_DATA_VERSION = 'v12-market';
+const DEMO_DATA_VERSION = 'v13-product-content';
 // 把版本檢查抽成獨立函式，因為原本只有「按下切換按鈕」才會檢查版本，
 // 如果使用者本來就在示範模式、只是重新整理頁面，版本檢查完全不會跑，
 // 畫面就會卡在舊資料。這裡讓「頁面載入時」也會做同樣的檢查，不用特地切換模式才能刷新。
@@ -2769,6 +2898,13 @@ function renderProductDetail(id){
       </div>
     </div>
     <div class="sec">
+      <div class="sec-title">適合的客戶現況</div>
+      <div style="padding:10px 14px;font-size:13px;color:var(--text2);line-height:1.7;background:var(--card);border:1px solid var(--border2);border-radius:var(--radius);">
+        ${p.fitProfile ? p.fitProfile.replace(/\n/g,'<br>') : '<span style="color:var(--text3);">還沒填——建議寫「客戶有這些症狀/背景時，這個產品最好用」，例如產業別、規模、既有系統痛點</span>'}
+      </div>
+      <button class="btn btn-sm" style="margin-top:8px;" onclick="editProductFit(${id})"><i class="ti ti-pencil"></i> 編輯客戶匹配說明</button>
+    </div>
+    <div class="sec">
       <div class="sec-title">最新模組／功能更新</div>
       <div class="field-group">
         ${(p.updates||[]).length===0?'<div style="padding:14px;color:var(--text3);font-size:13px;">還沒有更新記錄</div>':
@@ -2781,6 +2917,29 @@ function renderProductDetail(id){
       <div style="display:flex;gap:8px;margin-top:10px;">
         <input class="field-input" id="pu-text" placeholder="記錄新的模組/功能更新…" style="border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px;">
         <button class="btn btn-sm btn-primary" style="flex-shrink:0;" onclick="addProductUpdate(${id})">記錄</button>
+      </div>
+    </div>
+    <div class="sec">
+      <div class="sec-title">相關文件</div>
+      <div style="font-size:11px;color:var(--text3);margin-bottom:10px;line-height:1.5;">
+        單檔限制 1.5MB 以內（系統沒有後端，檔案直接存在瀏覽器裡，額度有限）。規格書、報價單這種大檔案，建議改貼 Google Drive／Notion 連結。
+      </div>
+      <div class="field-group">
+        ${(p.files||[]).length===0?'<div style="padding:14px;color:var(--text3);font-size:13px;">還沒有上傳文件</div>':
+          (p.files||[]).map(f=>`
+          <div class="field-row" style="align-items:center;">
+            <span style="flex:1;font-size:13px;padding:10px 14px;"><i class="ti ti-paperclip" style="margin-right:6px;color:var(--text3);"></i>${f.name} <span style="color:var(--text3);font-size:11px;">(${(f.size/1024).toFixed(0)} KB)</span></span>
+            <a href="${f.dataUrl}" download="${f.name}" class="btn btn-sm" style="margin-right:6px;">下載</a>
+            <button style="background:none;border:none;cursor:pointer;color:var(--red);" onclick="deleteProductFile(${id},'${f.id}')"><i class="ti ti-trash"></i></button>
+          </div>`).join('')}
+      </div>
+      <div style="margin-top:10px;">
+        <input type="file" id="pf-input-${id}" style="display:none" onchange="handleProductFileUpload(${id}, this)">
+        <button class="btn btn-sm" onclick="document.getElementById('pf-input-${id}').click()"><i class="ti ti-upload"></i> 上傳文件</button>
+      </div>
+      <div class="field-row" style="margin-top:10px;border-top:1px solid var(--border2);padding-top:10px;">
+        <span class="field-label">或貼文件連結</span>
+        <input class="field-input" value="${p.docLink||''}" placeholder="Google Drive / Notion 連結（放大檔案）" onblur="setProductField(${id},'docLink',this.value)">
       </div>
     </div>
   `;
@@ -2838,6 +2997,52 @@ function addProductUpdate(id){
   const p = products.find(x=>x.id===id);
   if(!p.updates) p.updates = [];
   p.updates.unshift({id:Date.now(), date:TODAY, text});
+  saveProducts();
+  renderProductDetail(id);
+}
+function setProductField(id, field, val){
+  const p = products.find(x=>x.id===id);
+  p[field] = val;
+  saveProducts();
+}
+function editProductFit(id){
+  const p = products.find(x=>x.id===id);
+  const val = prompt('這個產品適合什麼樣的客戶現況？（產業別、規模、既有系統痛點…）', p.fitProfile||'');
+  if(val===null) return;
+  p.fitProfile = val;
+  saveProducts();
+  renderProductDetail(id);
+}
+// 檔案上傳：因為系統沒有後端，檔案直接轉成 base64 存進瀏覽器的 localStorage，
+// 這個空間通常只有 5-10MB、還要跟客戶/產品/市場資料共用，所以限制單檔 1.5MB，
+// 避免使用者不小心塞一個大檔案把整個系統的儲存空間擠爆，導致其他資料存不進去。
+const PRODUCT_FILE_SIZE_LIMIT = 1.5 * 1024 * 1024;
+function handleProductFileUpload(id, inputEl){
+  const file = inputEl.files[0];
+  if(!file) return;
+  if(file.size > PRODUCT_FILE_SIZE_LIMIT){
+    alert(`這個檔案 ${(file.size/1024/1024).toFixed(1)}MB，超過單檔 1.5MB 的限制。\n\n系統沒有後端伺服器，檔案是直接存在瀏覽器裡的，空間有限。建議把這個檔案放到 Google Drive 或 Notion，改用「貼文件連結」的方式記錄。`);
+    inputEl.value = '';
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = function(e){
+    const p = products.find(x=>x.id===id);
+    if(!p.files) p.files = [];
+    p.files.push({ id: Date.now()+'', name: file.name, size: file.size, type: file.type, dataUrl: e.target.result, uploadedAt: TODAY });
+    saveProducts();
+    renderProductDetail(id);
+    showToast('✓ 檔案上傳成功');
+  };
+  reader.onerror = function(){
+    alert('讀取檔案失敗，請再試一次。');
+  };
+  reader.readAsDataURL(file);
+}
+function deleteProductFile(id, fileId){
+  if(!confirm('確定要刪除這個檔案嗎？')) return;
+  const p = products.find(x=>x.id===id);
+  p.files = (p.files||[]).filter(f=>f.id!==fileId);
   saveProducts();
   renderProductDetail(id);
 }
@@ -3945,23 +4150,54 @@ function exportExcel(){
   showToast('✓ Excel 已匯出（3 張工作表）');
 }
 function exportJSON(){
-  const blob = new Blob([JSON.stringify({version:'bds_v1',exportedAt:TODAY,customers},null,2)],{type:'application/json'});
+  const blob = new Blob([JSON.stringify({version:'bds_v2',exportedAt:TODAY,customers,products,marketItems},null,2)],{type:'application/json'});
   const a = document.createElement('a'); a.href=URL.createObjectURL(blob); a.download=`BD成交系統備份_${TODAY}.json`; a.click();
   showToast('✓ 備份完成');
 }
+// 匯入現在同時支援客戶／產品／市場動態三種資料，各自獨立判斷有沒有出現在檔案裡，
+// 不用三種都有才能匯入——例如我只給你一份「產品資料更新」的檔案，裡面只有 products，
+// 一樣匯得進去，不會動到你現有的客戶資料。舊版只有客戶陣列的備份檔還是相容。
 function importJSON(e){
   const file = e.target.files[0]; if(!file) return;
   const reader = new FileReader();
   reader.onload = ev => {
     try{
       const data = JSON.parse(ev.target.result);
-      const arr = data.customers||data;
-      if(!Array.isArray(arr)) throw new Error();
-      if(!confirm(`確定匯入 ${arr.length} 筆客戶資料？現有資料將被覆蓋。`)) return;
-      customers = arr;
-      nextId = Math.max(0,...customers.map(c=>c.id))+1;
-      save(); showOverview();
-      showToast(`✓ 已匯入 ${arr.length} 筆客戶`);
+      const isLegacyArray = Array.isArray(data);
+      const hasCustomers = isLegacyArray || Array.isArray(data.customers);
+      const hasProducts = !isLegacyArray && Array.isArray(data.products);
+      const hasMarket = !isLegacyArray && Array.isArray(data.marketItems);
+      if(!hasCustomers && !hasProducts && !hasMarket) throw new Error();
+
+      const msgs = [];
+      if(hasCustomers){
+        const arr = isLegacyArray ? data : data.customers;
+        if(confirm(`確定匯入 ${arr.length} 筆客戶資料？現有客戶資料將被覆蓋。`)){
+          customers = arr;
+          nextId = customers.length ? Math.max(...customers.map(c=>c.id))+1 : 1;
+          save();
+          msgs.push(`${arr.length} 筆客戶`);
+        }
+      }
+      if(hasProducts){
+        if(confirm(`確定匯入 ${data.products.length} 項產品資料？現有產品資料將被覆蓋。`)){
+          products = data.products;
+          nextProductId = products.length ? Math.max(...products.map(p=>p.id))+1 : 1;
+          saveProducts();
+          msgs.push(`${data.products.length} 項產品`);
+        }
+      }
+      if(hasMarket){
+        if(confirm(`確定匯入 ${data.marketItems.length} 則市場動態？現有市場資料將被覆蓋。`)){
+          marketItems = data.marketItems;
+          nextMarketId = marketItems.length ? Math.max(...marketItems.map(m=>m.id))+1 : 1;
+          saveMarketItems();
+          msgs.push(`${data.marketItems.length} 則市場動態`);
+        }
+      }
+      if(msgs.length===0){ e.target.value=''; return; }
+      showOverview();
+      showToast(`✓ 已匯入 ${msgs.join('、')}`);
     } catch { showToast('檔案格式錯誤'); }
   };
   reader.readAsText(file);
