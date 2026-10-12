@@ -158,13 +158,35 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
 
 /* 業績目標卡 */
 .goals-card { background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 1.25rem; }
-.goals-card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.goals-card-header { display: flex; flex-wrap: wrap; gap: 4px 12px; justify-content: space-between; align-items: center; margin-bottom: 10px; }
 .goals-card-title { font-size: 13px; font-weight: 700; color: var(--text2); }
 .goals-row { margin-bottom: 12px; }
 .goals-row:last-child { margin-bottom: 0; }
 .goals-label { font-size: 12px; color: var(--text3); margin-bottom: 4px; }
 .goals-bar-wrap { width: 100%; height: 8px; background: var(--bg2); border-radius: 99px; overflow: hidden; margin-bottom: 4px; }
 .goals-bar-fill { height: 100%; background: linear-gradient(90deg, var(--primary), #8b7ee8); border-radius: 99px; transition: width .2s; }
+/* 全年達成卡：實際已開票 + Q4 案子情境（低標 50%+、高標 25%+、加權預估） */
+.fy-bar { position: relative; height: 14px; background: var(--bg2); border-radius: 99px; margin: 10px 0 6px; }
+.fy-seg { position: absolute; top: 0; height: 100%; border-radius: 99px; }
+.fy-seg.actual { background: var(--primary); z-index: 3; }
+.fy-seg.low { background: #b9c3f5; z-index: 2; }
+.fy-seg.high { background: #e3e7fb; z-index: 1; }
+.fy-mark { position: absolute; top: -4px; width: 2px; height: 22px; z-index: 4; }
+.fy-mark.target { background: var(--red); }
+.fy-mark.weighted { background: var(--text); width: 3px; }
+.fy-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11px; color: var(--text3); margin-bottom: 10px; }
+.fy-legend i.sw { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 4px; vertical-align: -1px; }
+.fy-grid { display: grid; grid-template-columns: repeat(2, minmax(0,1fr)); gap: 8px; }
+.fy-cell { background: var(--bg2); border-radius: 6px; padding: 8px 10px; }
+.fy-cell .k { font-size: 11px; color: var(--text3); }
+.fy-cell .v { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 2px; }
+.fy-cell .v small { font-size: 11px; font-weight: 600; margin-left: 4px; }
+.fy-cell .v small.ok { color: var(--green); } .fy-cell .v small.no { color: var(--red); }
+.fy-note { font-size: 11px; color: var(--text3); margin-top: 8px; line-height: 1.6; }
+.deal-row { display: grid; grid-template-columns: minmax(0,1fr) 96px 110px 28px; gap: 6px; align-items: center; padding: 6px 14px; border-top: 1px solid var(--border2); }
+.deal-row input, .deal-row select { width: 100%; font-size: 12px; padding: 5px 6px; border: 1px solid var(--border); border-radius: 6px; background: var(--card); color: var(--text); min-width: 0; }
+.deal-row .del { border: none; background: none; color: var(--text3); cursor: pointer; font-size: 15px; }
+@media (max-width: 480px){ .deal-row { grid-template-columns: minmax(0,1fr) 84px; } .fy-grid { grid-template-columns: minmax(0,1fr); } }
 .goals-nums { font-size: 13px; font-weight: 600; color: var(--text); }
 
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 1.25rem; }
@@ -2538,11 +2560,22 @@ let goalsEditMode = false;
 function getYearKey(d){ return String(new Date(d).getFullYear()); }
 function getQuarterKey(d){ const dt=new Date(d); const q=Math.floor(dt.getMonth()/3)+1; return `${dt.getFullYear()}-Q${q}`; }
 function saveGoals(){ localStorage.setItem(goalsKey(), JSON.stringify(goals)); }
+const invoicedPays = c => (c.invoice?.payments||[]).filter(p=>p.invoiced && p.incomeDate && (parseFloat(p.amount)||0));
 function computeAchieved(){
   const curYear = getYearKey(TODAY), curQKey = getQuarterKey(TODAY);
   let yearAmt=0, qAmt=0;
+  // 業績以「已開票」為準：客戶有已開票且有日期的款項時，依開票日逐筆認列；
+  // 這樣同一個客戶可以同時有已開票的分期與進行中的新案，不受客戶狀態影響。
+  // 沒有任何已開票款項的客戶，沿用舊規則（已簽約 + 簽約日，認列合約金額）。
   customers.forEach(c=>{
-    if(c.status==='已簽約' && c.signedDate){
+    const pays = invoicedPays(c);
+    if(pays.length){
+      pays.forEach(p=>{
+        const a = parseFloat(p.amount)||0;
+        if(getYearKey(p.incomeDate)===curYear) yearAmt+=a;
+        if(getQuarterKey(p.incomeDate)===curQKey) qAmt+=a;
+      });
+    } else if(c.status==='已簽約' && c.signedDate){
       if(getYearKey(c.signedDate)===curYear) yearAmt+=(c.amount||0);
       if(getQuarterKey(c.signedDate)===curQKey) qAmt+=(c.amount||0);
     }
@@ -2701,6 +2734,112 @@ function todayReminderHTML(){
   </div>`;
 }
 
+// ══════════════════════════════════════
+// 全年達成（FY 起算日之後的已開票 + Q4 案子情境）
+// ══════════════════════════════════════
+// 案子層（c.deals）：一個客戶可以有多個案子、各自階段與 GP。
+// 階段只存代號，機率由這張表決定，改階段就自動重算，不會出現機率與階段不一致。
+const DEAL_STAGES = [
+  {k:'S6', label:'S6 90%', p:.9},
+  {k:'S5', label:'S5 75%', p:.75},
+  {k:'S4', label:'S4 50%', p:.5},
+  {k:'S3', label:'S3 25%', p:.25},
+  {k:'S7', label:'S7 已開票', p:0},
+  {k:'移出', label:'移出本年', p:0},
+  {k:'Lost', label:'Lost', p:0},
+];
+const dealProb = st => (DEAL_STAGES.find(x=>x.k===st)||{p:0}).p;
+// FY 起算日：Q1 為到職過渡期不列入，所以從 Q2 開始算；目標金額沿用「業績目標」卡的年度目標。
+const FY_START = '2026-04-01';
+function computeFY(){
+  const year = FY_START.slice(0,4);
+  let actual = 0;
+  customers.forEach(c=>{
+    invoicedPays(c).forEach(p=>{ if(p.incomeDate>=FY_START && p.incomeDate.slice(0,4)===year) actual += parseFloat(p.amount)||0; });
+  });
+  let low=0, high=0, weighted=0, nLow=0, nHigh=0;
+  customers.forEach(c=>{
+    (c.deals||[]).forEach(d=>{
+      const p = dealProb(d.stage), gp = parseFloat(d.gp)||0;
+      if(p<=0 || !gp) return;
+      weighted += gp*p;
+      if(p>=.5){ low += gp; nLow++; }
+      if(p>=.25){ high += gp; nHigh++; }
+    });
+  });
+  const target = (goals.annual && goals.annual[year]) || 0;
+  return { year, actual, low:actual+low, high:actual+high, weighted:actual+weighted, target, nLow, nHigh, q4Low:low, q4High:high };
+}
+function fyCardHTML(){
+  const f = computeFY();
+  const hasDeals = customers.some(c=>(c.deals||[]).length);
+  if(!f.actual && !hasDeals) return '';
+  const fmt = n => n>=10000 ? (Math.round(n/1000)/10).toLocaleString()+'萬' : Math.round(n).toLocaleString();
+  const pct = n => f.target ? Math.round(n/f.target*100) : 0;
+  const scale = Math.max(f.high, f.target, 1) * 1.04;
+  const w = n => Math.min(100, n/scale*100).toFixed(2)+'%';
+  const badge = n => f.target ? `<small class="${n>=f.target?'ok':'no'}">${pct(n)}%</small>` : '';
+  const gap = Math.max(0, f.target - f.actual);
+  const lowCushion = f.low - f.target;
+  return `<div class="goals-card">
+    <div class="goals-card-header">
+      <div class="goals-card-title">FY${f.year.slice(2)} 全年達成（Q2 起算，GP）</div>
+      <div style="font-size:12px;color:var(--text2);">實際 <b>NT$ ${fmt(f.actual)}</b>${f.target?` / 目標 NT$ ${fmt(f.target)}（${pct(f.actual)}%）`:'（尚未設定年度目標）'}</div>
+    </div>
+    <div class="fy-bar" title="實際 ${Math.round(f.actual).toLocaleString()}｜低標 ${Math.round(f.low).toLocaleString()}｜高標 ${Math.round(f.high).toLocaleString()}">
+      <div class="fy-seg high" style="left:0;width:${w(f.high)}"></div>
+      <div class="fy-seg low" style="left:0;width:${w(f.low)}"></div>
+      <div class="fy-seg actual" style="left:0;width:${w(f.actual)}"></div>
+      <div class="fy-mark weighted" style="left:${w(f.weighted)}" title="加權預估"></div>
+      ${f.target?`<div class="fy-mark target" style="left:${w(f.target)}" title="年度目標"></div>`:''}
+    </div>
+    <div class="fy-legend">
+      <span><i class="sw" style="background:var(--primary)"></i>實際已開票</span>
+      <span><i class="sw" style="background:#b9c3f5"></i>低標：+ Q4 50% 以上</span>
+      <span><i class="sw" style="background:#e3e7fb;border:1px solid #cfd5f3"></i>高標：+ Q4 25% 以上</span>
+      <span><i class="sw" style="background:var(--text);width:3px"></i>加權預估</span>
+      ${f.target?'<span><i class="sw" style="background:var(--red);width:2px"></i>年度目標</span>':''}
+    </div>
+    <div class="fy-grid">
+      <div class="fy-cell"><div class="k">加權預估（Q4 乘機率）</div><div class="v">NT$ ${fmt(f.weighted)}${badge(f.weighted)}</div></div>
+      <div class="fy-cell"><div class="k">距目標還差（以實際計）</div><div class="v">NT$ ${fmt(gap)}</div></div>
+      <div class="fy-cell"><div class="k">低標｜Q4 50% 以上 ${f.nLow} 案全收</div><div class="v">NT$ ${fmt(f.low)}${badge(f.low)}</div></div>
+      <div class="fy-cell"><div class="k">高標｜Q4 25% 以上 ${f.nHigh} 案全收</div><div class="v">NT$ ${fmt(f.high)}${badge(f.high)}</div></div>
+    </div>
+    ${f.target?`<div class="fy-note">${lowCushion>=0?`低標只比目標多 NT$ ${fmt(lowCushion)}，50% 以上的案子掉一案就可能跌破目標。`:`低標比目標少 NT$ ${fmt(-lowCushion)}，需要把 25% 的案子推進到 50% 以上。`}案子階段在客戶頁「優先度」分頁的「案子明細」修改，這張卡會自動重算。</div>`:''}
+  </div>`;
+}
+function dealsSectionHTML(c){
+  const deals = c.deals||[];
+  const opts = st => DEAL_STAGES.map(x=>`<option value="${x.k}" ${x.k===st?'selected':''}>${x.label}</option>`).join('');
+  return `<div class="sec">
+    <div class="sec-title">案子明細（全年達成卡依此計算）</div>
+    <div style="font-size:11px;color:var(--text3);margin:-4px 0 8px;">S6 收PO/簽約｜S5 議價/競價｜S4 方案設計/驗證｜S3 客戶有興趣。開票後改成 S7，並在收款明細記一筆已開票。</div>
+    <div class="field-group">
+      ${deals.length?deals.map((d,i)=>`<div class="deal-row">
+        <input value="${(d.name||'').replace(/"/g,'&quot;')}" placeholder="案子名稱" onchange="saveDealField(${c.id},${i},'name',this.value)">
+        <select onchange="saveDealField(${c.id},${i},'stage',this.value)">${opts(d.stage)}</select>
+        <input type="number" value="${d.gp||''}" placeholder="GP" onchange="saveDealField(${c.id},${i},'gp',parseFloat(this.value)||0)">
+        <button class="del" title="刪除這個案子" onclick="removeDeal(${c.id},${i})"><i class="ti ti-x"></i></button>
+      </div>`).join(''):'<div style="padding:10px 14px;font-size:12px;color:var(--text3);">還沒有案子。成交開票後請把階段改成 S7，並在收款明細記一筆已開票。</div>'}
+      <div style="padding:8px 14px;border-top:1px solid var(--border2);"><button class="btn btn-sm" onclick="addDeal(${c.id})"><i class="ti ti-plus"></i> 新增案子</button></div>
+    </div>
+  </div>`;
+}
+function saveDealField(id, i, field, val){
+  const c = getC(id); if(!c.deals||!c.deals[i]) return;
+  c.deals[i][field] = val; c.updatedAt = TODAY; save();
+  if(field==='stage') renderCustomer(id,'priority');
+}
+function addDeal(id){
+  const c = getC(id); if(!c.deals) c.deals = [];
+  c.deals.push({name:'', stage:'S3', gp:0}); save(); renderCustomer(id,'priority');
+}
+function removeDeal(id, i){
+  const c = getC(id); if(!c.deals) return;
+  c.deals.splice(i,1); save(); renderCustomer(id,'priority');
+}
+
 function goalsCardHTML(){
   const { yearAmt, qAmt, curYear, curQKey } = computeAchieved();
   const annualTarget = (goals.annual && goals.annual[curYear]) || 0;
@@ -2749,7 +2888,11 @@ function computeSIRevenue(){
     if(!groups[key]) groups[key] = { name:key, dealCount:0, pipelineAmt:0, signedAmt:0, collectedAmt:0, customers:[] };
     groups[key].dealCount++;
     if(c.status!=='暫緩跟進') groups[key].pipelineAmt += (c.amount||0);
-    if(c.status==='已簽約'){
+    const pays = invoicedPays(c);
+    if(pays.length){
+      groups[key].signedAmt += pays.reduce((s,p)=>s+(parseFloat(p.amount)||0),0);
+      groups[key].collectedAmt += calcCollected(c);
+    } else if(c.status==='已簽約'){
       groups[key].signedAmt += (c.amount||0);
       groups[key].collectedAmt += calcCollected(c);
     }
@@ -3561,6 +3704,8 @@ function renderOverview(){
 
     ${todayReminderHTML()}
 
+    ${fyCardHTML()}
+
     ${goalsCardHTML()}
 
     ${siRevenueCardHTML()}
@@ -4088,6 +4233,7 @@ function quadrantChartHTML(prob, cost){
 function priorityHTML(c){
   const q = calcQ(c.prob,c.cost);
   return `
+  ${dealsSectionHTML(c)}
   <div class="sec">
     <div class="sec-title">象限評分</div>
     <div class="field-group">
