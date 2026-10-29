@@ -432,6 +432,53 @@ body.demo-active #mode-badge { background: rgba(255,255,255,.28); font-weight:70
   .log-btn{padding:6px 8px;font-size:18px;}
   .collected-cb{width:18px;height:18px;}
 }
+/* ══ 動態效果（數字跳動、圖表生長、即時跑動感）══ */
+.goals-bar-fill { position: relative; overflow: hidden; }
+.fy-seg.actual { overflow: hidden; }
+.goals-bar-fill::after, .fy-seg.actual::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,.55) 50%, transparent 100%);
+  transform: translateX(-100%); animation: mx-shimmer 2.8s ease-in-out 1.4s infinite;
+}
+@keyframes mx-shimmer { 0%{transform:translateX(-100%)} 60%,100%{transform:translateX(100%)} }
+.fy-mark { opacity: 0; transform: scaleY(0); transition: opacity .4s ease, transform .4s ease; }
+.fy-mark.mx-in { opacity: 1; transform: scaleY(1); }
+.fy-mark.weighted.mx-in { animation: mx-markpulse 2s ease-in-out 1.6s infinite; }
+@keyframes mx-markpulse { 0%,100%{box-shadow:0 0 0 0 rgba(45,45,45,.35)} 50%{box-shadow:0 0 0 4px rgba(45,45,45,0)} }
+.stat-card { transition: transform .18s ease, box-shadow .18s ease; }
+.stat-card:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(102,126,234,.15); }
+.stat-num.red { animation: mx-redpulse 1.8s ease-in-out infinite; }
+@keyframes mx-redpulse { 0%,100%{opacity:1} 50%{opacity:.55} }
+.reminder-pill.tier-today { animation: mx-ring 1.6s ease-out infinite; }
+@keyframes mx-ring { 0%{box-shadow:0 0 0 0 rgba(239,83,80,.55)} 100%{box-shadow:0 0 0 8px rgba(239,83,80,0)} }
+.reminder-pill.tier-tomorrow { animation: mx-glow 2.4s ease-in-out infinite; }
+@keyframes mx-glow { 0%,100%{box-shadow:0 0 0 0 rgba(255,183,77,0)} 50%{box-shadow:0 0 0 4px rgba(255,183,77,.35)} }
+.overdue-banner .ti-bell-ringing { display: inline-block; transform-origin: 50% 0; animation: mx-bell 4s ease-in-out infinite; }
+@keyframes mx-bell { 0%,82%,100%{transform:rotate(0)} 85%{transform:rotate(16deg)} 88%{transform:rotate(-14deg)} 91%{transform:rotate(10deg)} 94%{transform:rotate(-6deg)} }
+/* 即時跑馬燈 */
+.mx-ticker { display: flex; align-items: center; gap: 10px; background: var(--card); border: 1px solid var(--border2); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 1.25rem; overflow: hidden; }
+.mx-ticker-tag { flex-shrink: 0; display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: var(--red); letter-spacing: .04em; }
+.mx-dot { width: 8px; height: 8px; border-radius: 50%; background: #2ecc71; box-shadow: 0 0 0 0 rgba(46,204,113,.6); animation: mx-dotpulse 1.6s ease-out infinite; flex-shrink: 0; }
+.mx-ticker-tag .mx-dot { background: var(--red); animation-name: mx-dotpulse-red; }
+@keyframes mx-dotpulse { 0%{box-shadow:0 0 0 0 rgba(46,204,113,.6)} 100%{box-shadow:0 0 0 7px rgba(46,204,113,0)} }
+@keyframes mx-dotpulse-red { 0%{box-shadow:0 0 0 0 rgba(220,53,69,.6)} 100%{box-shadow:0 0 0 7px rgba(220,53,69,0)} }
+.mx-ticker-viewport { flex: 1; min-width: 0; overflow: hidden; -webkit-mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); mask-image: linear-gradient(90deg, transparent, #000 4%, #000 96%, transparent); }
+.mx-ticker-track { display: inline-flex; white-space: nowrap; animation: mx-scroll linear infinite; }
+.mx-ticker:hover .mx-ticker-track { animation-play-state: paused; }
+.mx-ticker-item { font-size: 12px; color: var(--text2); padding-right: 28px; }
+.mx-ticker-item b { color: var(--text); font-weight: 600; }
+.mx-ticker-item.click { cursor: pointer; }
+.mx-ticker-item.click:hover b { color: var(--primary); text-decoration: underline; }
+@keyframes mx-scroll { from{transform:translateX(0)} to{transform:translateX(-50%)} }
+/* topbar 即時時鐘 */
+.mx-live { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,.9); font-variant-numeric: tabular-nums; }
+.mx-live .mx-dot { width: 7px; height: 7px; }
+@media (max-width: 600px){ .mx-live { display: none; } }
+@media (prefers-reduced-motion: reduce){
+  .goals-bar-fill::after, .fy-seg.actual::after { display: none; }
+  .mx-ticker-track, .mx-dot, .stat-num.red, .reminder-pill, .overdue-banner .ti-bell-ringing, .fy-mark { animation: none !important; }
+  .fy-mark { opacity: 1; transform: none; }
+}
 </style>
 </head>
 <body>
@@ -4679,6 +4726,114 @@ function importJSON(e){
   reader.readAsText(file);
   e.target.value='';
 }
+
+// ══════════════════════════════════════
+// 動態效果：數字跳動、圖表生長、即時跑動感
+// 不改任何資料邏輯，只在畫面渲染完之後加動畫
+// ══════════════════════════════════════
+(function(){
+  const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const panel = document.getElementById('main-panel');
+  if(!panel) return;
+  const esc = s => String(s==null?'':s).replace(/[&<>"]/g, ch=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[ch]));
+  const ease = t => 1 - Math.pow(1-t, 3);
+
+  // 1. 數字從 0 跳到實際值（保留逗號、小數、萬、%）
+  const NUM_SEL = '.stat-num, .fy-cell .v, .goals-nums, .goals-card-header b';
+  function countUp(el, delay){
+    if(el.dataset.mx) return; el.dataset.mx = '1';
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    const nodes = []; let n;
+    while((n = walker.nextNode())) if(/\d/.test(n.nodeValue)) nodes.push({ node:n, orig:n.nodeValue });
+    if(!nodes.length) return;
+    const fmt = (v, dec, comma) => { let s = v.toFixed(dec); if(comma){ const p = s.split('.'); p[0] = p[0].replace(/\B(?=(\d{3})+(?!\d))/g, ','); s = p.join('.'); } return s; };
+    const render = t => nodes.forEach(o => {
+      o.node.nodeValue = o.orig.replace(/\d[\d,]*(?:\.\d+)?/g, m => {
+        const dec = (m.split('.')[1]||'').length, val = parseFloat(m.replace(/,/g,''));
+        return fmt(val*ease(t), dec, m.includes(','));
+      });
+    });
+    const dur = 1100; let start = null;
+    render(0);
+    setTimeout(()=>{
+      const step = ts => { if(start===null) start = ts; const t = Math.min(1, (ts-start)/dur);
+        if(t<1){ render(t); requestAnimationFrame(step); } else nodes.forEach(o=>o.node.nodeValue = o.orig); };
+      requestAnimationFrame(step);
+    }, delay);
+  }
+
+  // 2. 進度條從 0 長到實際寬度
+  function growBar(el, delay){
+    if(el.dataset.mx) return; el.dataset.mx = '1';
+    const target = el.style.width; if(!target) return;
+    el.style.transition = 'none'; el.style.width = '0';
+    void el.offsetWidth;
+    el.style.transition = `width 1.2s cubic-bezier(.2,.8,.2,1) ${delay}ms`;
+    el.style.width = target;
+  }
+
+  // 3. 首頁跑馬燈：把今天最該處理的事串起來一直跑，點名字直接跳到客戶頁
+  function tickerItems(){
+    const items = []; const nm = c => esc(c.company||c.name||'（未命名）');
+    const wan = n => n>=10000 ? (Math.round(n/1000)/10).toLocaleString()+'萬' : Math.round(n).toLocaleString();
+    try{
+      const f = computeFY();
+      if(f && (f.actual || f.weighted)){
+        items.push(`<span class="mx-ticker-item">📈 全年實際 <b>NT$ ${wan(f.actual)}</b>${f.target?`，達成 <b>${Math.round(f.actual/f.target*100)}%</b>`:''}</span>`);
+        items.push(`<span class="mx-ticker-item">🎯 加權預估 <b>NT$ ${wan(f.weighted)}</b>${f.target?`，距目標還差 <b>NT$ ${wan(Math.max(0,f.target-f.actual))}</b>`:''}</span>`);
+      }
+    }catch(e){}
+    try{
+      const r = computeTodayReminders();
+      const add = (list, icon, txt, tab, max) => (list||[]).slice(0,max).forEach(c =>
+        items.push(`<span class="mx-ticker-item click" onclick="openCustomer(${c.id},'${tab}')">${icon} <b>${nm(c)}</b> ${txt(c)}</span>`));
+      add(r.meetingSoon, '🗓️', c=>`會議 ${formatMeetingTime(c.nextMeeting.at)}`, 'push', 5);
+      add(r.needFollow, '🔴', c=>{ const d = daysSince(lastLogDate(c)); return d>=999 ? '還沒有追蹤紀錄' : `已 ${d} 天沒追蹤`; }, 'log', 6);
+      add(r.pocDue, '🧪', ()=>'PoC 快到期，準備結案', 'diag', 4);
+      add(r.needInvoice, '💰', ()=>'待開票', 'push', 4);
+      add(r.needRenewal, '🔁', ()=>'續約 30 天內到期', 'push', 4);
+      add(r.needDM, '👤', ()=>'還沒接觸決策者', 'diag', 3);
+    }catch(e){}
+    if(!items.length) items.push('<span class="mx-ticker-item">✅ 今天沒有待處理的提醒</span>');
+    return items.join('');
+  }
+  function mountTicker(){
+    const head = panel.querySelector('.pipeline-header');
+    if(!head || panel.querySelector('.mx-ticker')) return;
+    const html = tickerItems();
+    const wrap = document.createElement('div');
+    wrap.className = 'mx-ticker';
+    wrap.innerHTML = `<div class="mx-ticker-tag"><span class="mx-dot"></span>LIVE</div>
+      <div class="mx-ticker-viewport"><div class="mx-ticker-track">${html}${html}</div></div>`;
+    head.insertAdjacentElement('afterend', wrap);
+    const track = wrap.querySelector('.mx-ticker-track');
+    requestAnimationFrame(()=>{ track.style.animationDuration = Math.max(18, track.scrollWidth/2/45) + 's'; });
+  }
+
+  // 每次主畫面重新渲染，就對新出現的元素套動畫
+  function animatePanel(){
+    mountTicker();
+    if(REDUCED) return;
+    panel.querySelectorAll(NUM_SEL).forEach((el,i)=>countUp(el, Math.min(i*40, 500)));
+    panel.querySelectorAll('.goals-bar-fill, .fy-seg').forEach((el,i)=>growBar(el, 80 + Math.min(i*60, 600)));
+    panel.querySelectorAll('.fy-mark:not(.mx-in)').forEach(el=>setTimeout(()=>el.classList.add('mx-in'), 1100));
+  }
+  let pending = false;
+  new MutationObserver(()=>{ if(pending) return; pending = true; requestAnimationFrame(()=>{ pending = false; animatePanel(); }); })
+    .observe(panel, { childList:true, subtree:true });
+
+  // topbar 即時時鐘
+  const right = document.querySelector('.topbar-right');
+  if(right && !document.getElementById('mx-live')){
+    const live = document.createElement('div');
+    live.className = 'mx-live'; live.id = 'mx-live';
+    live.innerHTML = '<span class="mx-dot"></span><span class="mx-clock"></span>';
+    right.insertBefore(live, right.firstChild);
+    const clk = live.querySelector('.mx-clock');
+    const tick = () => { const d = new Date(); clk.textContent = [d.getHours(), d.getMinutes(), d.getSeconds()].map(x=>String(x).padStart(2,'0')).join(':'); };
+    tick(); setInterval(tick, 1000);
+  }
+})();
 
 // 初始化
 if(sessionStorage.getItem('bds_auth')==='1'){ ensureDemoDataFresh(); updateDemoModeUI(); showOverview(); }
